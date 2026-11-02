@@ -159,6 +159,33 @@ public class AccountController : Controller
         return RedirectToAction("Login");
     }
 
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> QuickSwitch(string targetRole, string? returnUrl)
+    {
+        var targetUsername = targetRole?.ToLowerInvariant() switch
+        {
+            "admin" => "admin",
+            "staff" => "staff",
+            "student" => "student",
+            _ => "admin"
+        };
+
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == targetUsername);
+        if (user != null)
+        {
+            await SignInUserAsync(user, false);
+            TempData["SuccessMessage"] = $"Beralih peran ke: {user.FullName} ({user.Role})";
+        }
+
+        if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+        {
+            return Redirect(returnUrl);
+        }
+
+        return RedirectToAction("Index", "Home");
+    }
+
     [HttpGet]
     public IActionResult AccessDenied()
     {

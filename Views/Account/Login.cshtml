@@ -1,46 +1,64 @@
 @model SmartRoom.Controllers.LoginViewModel
 @{
-    ViewData["Title"] = "Masuk ke Sistem SmartRoom";
-    Layout = null; // Clean focused login page
+    ViewData["Title"] = "Masuk ke SmartRoom";
+    Layout = null;
 }
 <!DOCTYPE html>
-<html lang="id" class="h-full bg-slate-900">
+<html lang="id" class="h-full bg-[#FAFAFA]">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Masuk — SmartRoom</title>
-    <!-- Fonts -->
+    <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; letter-spacing: -0.012em; }
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            letter-spacing: -0.018em;
+            background-color: #FAFAFA;
+            color: #09090B;
+        }
         .font-mono { font-family: 'JetBrains Mono', monospace; }
     </style>
 </head>
-<body class="h-full flex items-center justify-center p-4 antialiased bg-slate-950 text-slate-100">
+<body class="min-h-full flex items-center justify-center p-4 sm:p-6 antialiased relative overflow-hidden">
 
-    <div class="w-full max-w-md">
+    <!-- Ambient Subtle Radial Glow -->
+    <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <div class="absolute -top-32 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-gradient-to-b from-zinc-200/50 via-zinc-100/30 to-transparent blur-3xl opacity-70"></div>
+    </div>
+
+    <div class="w-full max-w-md relative z-10 space-y-6">
+        
         <!-- Brand Header -->
-        <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-emerald-500 text-slate-950 font-bold mb-3 shadow-lg shadow-emerald-500/25">
-                <i data-lucide="building-2" class="w-6 h-6 text-slate-950"></i>
-            </div>
-            <h1 class="text-2xl font-bold tracking-tight text-white">SmartRoom Portal</h1>
-            <p class="text-xs text-slate-400 mt-1">Sistem Otentikasi &amp; Peminjaman Ruangan Berbasis Role (RBAC)</p>
+        <div class="text-center space-y-2">
+            <a href="/" class="inline-flex items-center gap-2 group">
+                <div class="w-10 h-10 rounded-xl bg-zinc-900 text-white flex items-center justify-center font-bold text-base shadow-sm group-hover:scale-105 transition-transform duration-200">
+                    <span class="font-mono">S</span>
+                </div>
+            </a>
+            <h1 class="text-2xl font-extrabold tracking-tight text-zinc-950">
+                Masuk ke SmartRoom
+            </h1>
+            <p class="text-xs text-zinc-500">
+                Sistem Peminjaman Ruangan &amp; Otentikasi Role-Based Access Control
+            </p>
         </div>
 
         <!-- Login Card -->
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl">
-            <!-- Flash Alert -->
+        <div class="bg-white border border-zinc-200/80 rounded-2xl p-6 sm:p-8 shadow-xs">
+            
+            <!-- Toast Feedback -->
             @if (TempData["SuccessMessage"] != null)
             {
-                <div class="mb-5 p-3 rounded-xl bg-emerald-950/60 border border-emerald-800 text-emerald-300 text-xs flex items-center gap-2">
-                    <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400 flex-shrink-0"></i>
+                <div class="mb-5 p-3 rounded-xl bg-[#EDF3EC] border border-[#BBF7D0] text-[#166534] text-xs flex items-center gap-2">
+                    <i data-lucide="check-circle" class="w-4 h-4 text-[#166534] flex-shrink-0"></i>
                     <span>@TempData["SuccessMessage"]</span>
                 </div>
             }
@@ -49,18 +67,19 @@
                 @Html.AntiForgeryToken()
                 <input type="hidden" asp-for="ReturnUrl" />
 
-                <div asp-validation-summary="ModelOnly" class="p-3 rounded-lg bg-rose-950/60 border border-rose-800 text-rose-300 text-xs"></div>
+                <div asp-validation-summary="ModelOnly" class="p-3 rounded-xl bg-[#FEE2E2] border border-[#FECACA] text-[#991B1B] text-xs"></div>
 
                 <!-- Username Input -->
                 <div>
-                    <label class="block text-xs font-semibold uppercase font-mono tracking-wider text-slate-300 mb-1.5">
+                    <label class="block text-[11px] font-mono uppercase tracking-wider font-semibold text-zinc-700 mb-1.5">
                         Username atau Email
                     </label>
                     <div class="relative">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-zinc-400">
                             <i data-lucide="user" class="w-4 h-4"></i>
                         </span>
-                        <input asp-for="Username" id="inputUsername" class="w-full pl-9 pr-3 py-2.5 rounded-lg bg-slate-950 border border-slate-800 text-white placeholder-slate-600 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                        <input asp-for="Username" id="inputUsername" 
+                               class="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-zinc-50 border border-zinc-200 text-zinc-900 placeholder-zinc-400 text-xs focus:bg-white focus:border-zinc-900 focus:outline-none transition-all font-mono"
                                placeholder="admin / staff / student" required autofocus />
                     </div>
                 </div>
@@ -68,17 +87,19 @@
                 <!-- Password Input -->
                 <div>
                     <div class="flex items-center justify-between mb-1.5">
-                        <label class="block text-xs font-semibold uppercase font-mono tracking-wider text-slate-300">
+                        <label class="block text-[11px] font-mono uppercase tracking-wider font-semibold text-zinc-700">
                             Kata Sandi (Password)
                         </label>
                     </div>
                     <div class="relative">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-zinc-400">
                             <i data-lucide="lock" class="w-4 h-4"></i>
                         </span>
-                        <input asp-for="Password" id="inputPassword" type="password" class="w-full pl-9 pr-10 py-2.5 rounded-lg bg-slate-950 border border-slate-800 text-white placeholder-slate-600 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                        <input asp-for="Password" id="inputPassword" type="password" 
+                               class="w-full pl-9 pr-10 py-2.5 rounded-xl bg-zinc-50 border border-zinc-200 text-zinc-900 placeholder-zinc-400 text-xs focus:bg-white focus:border-zinc-900 focus:outline-none transition-all font-mono"
                                placeholder="••••••••" required />
-                        <button type="button" onclick="togglePassword()" class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-500 hover:text-slate-300">
+                        <button type="button" onclick="togglePassword()" 
+                                class="absolute inset-y-0 right-0 flex items-center pr-3 text-zinc-400 hover:text-zinc-700">
                             <i data-lucide="eye" id="eyeIcon" class="w-4 h-4"></i>
                         </button>
                     </div>
@@ -86,73 +107,94 @@
 
                 <!-- Remember Me -->
                 <div class="flex items-center justify-between text-xs pt-1">
-                    <label class="flex items-center gap-2 cursor-pointer text-slate-400 hover:text-slate-200">
-                        <input asp-for="RememberMe" type="checkbox" class="w-4 h-4 rounded bg-slate-950 border-slate-700 text-emerald-500 focus:ring-emerald-500">
-                        <span>Ingat saya selama 30 hari</span>
+                    <label class="flex items-center gap-2 cursor-pointer text-zinc-600 hover:text-zinc-900">
+                        <input asp-for="RememberMe" type="checkbox" class="w-4 h-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900">
+                        <span class="text-[11px]">Ingat saya selama 30 hari</span>
                     </label>
                 </div>
 
                 <!-- Submit Button -->
-                <button type="submit" class="w-full py-2.5 px-4 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm tracking-wide shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2 mt-2">
+                <button type="submit" 
+                        class="w-full py-2.5 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-medium text-xs shadow-xs transition-all active:scale-[0.98] flex items-center justify-center gap-2 mt-2">
                     <i data-lucide="log-in" class="w-4 h-4"></i>
                     <span>Masuk ke Akun</span>
                 </button>
             </form>
 
-            <!-- Quick Auto-Fill Badges for Evaluator/User Convenience -->
-            <div class="mt-6 pt-5 border-t border-slate-800/80">
-                <div class="text-[11px] font-mono uppercase tracking-wider text-slate-400 text-center mb-3">
-                    Kredensial Akun Pengujian (1-Klik Isi):
+            <!-- 1-Click Test Credentials Grid (Linear / Modulify Developer Style) -->
+            <div class="mt-6 pt-5 border-t border-zinc-100">
+                <div class="text-[10px] font-mono uppercase tracking-wider text-zinc-400 text-center mb-2.5 font-semibold">
+                    Akun Pengujian Demo (1-Klik Isi):
                 </div>
                 <div class="grid grid-cols-3 gap-2">
-                    <button type="button" onclick="fillCreds('admin', 'admin123')" class="p-2 rounded-lg bg-slate-950 border border-slate-800 hover:border-rose-500/50 text-left transition-colors">
-                        <div class="flex items-center gap-1 text-[11px] font-bold text-rose-400 font-mono">
-                            <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span> Admin
+                    <button type="button" onclick="fillCreds('admin', 'admin123')" 
+                            class="p-2 rounded-xl bg-zinc-50 border border-zinc-200 hover:border-zinc-400 text-left transition-all group">
+                        <div class="text-[10px] font-mono font-bold text-rose-700 flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Admin
                         </div>
-                        <div class="text-[10px] text-slate-400 font-mono mt-0.5">admin123</div>
+                        <div class="text-[9px] text-zinc-400 font-mono mt-0.5 group-hover:text-zinc-600">admin123</div>
                     </button>
-                    <button type="button" onclick="fillCreds('staff', 'staff123')" class="p-2 rounded-lg bg-slate-950 border border-slate-800 hover:border-blue-500/50 text-left transition-colors">
-                        <div class="flex items-center gap-1 text-[11px] font-bold text-blue-400 font-mono">
-                            <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span> Staff
+
+                    <button type="button" onclick="fillCreds('staff', 'staff123')" 
+                            class="p-2 rounded-xl bg-zinc-50 border border-zinc-200 hover:border-zinc-400 text-left transition-all group">
+                        <div class="text-[10px] font-mono font-bold text-blue-700 flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Staff
                         </div>
-                        <div class="text-[10px] text-slate-400 font-mono mt-0.5">staff123</div>
+                        <div class="text-[9px] text-zinc-400 font-mono mt-0.5 group-hover:text-zinc-600">staff123</div>
                     </button>
-                    <button type="button" onclick="fillCreds('student', 'student123')" class="p-2 rounded-lg bg-slate-950 border border-slate-800 hover:border-emerald-500/50 text-left transition-colors">
-                        <div class="flex items-center gap-1 text-[11px] font-bold text-emerald-400 font-mono">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Student
+
+                    <button type="button" onclick="fillCreds('student', 'student123')" 
+                            class="p-2 rounded-xl bg-zinc-50 border border-zinc-200 hover:border-zinc-400 text-left transition-all group">
+                        <div class="text-[10px] font-mono font-bold text-[#166534] flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-[#166534]"></span> Student
                         </div>
-                        <div class="text-[10px] text-slate-400 font-mono mt-0.5">student123</div>
+                        <div class="text-[9px] text-zinc-400 font-mono mt-0.5 group-hover:text-zinc-600">student123</div>
                     </button>
                 </div>
             </div>
 
-            <!-- Register Option -->
-            <div class="mt-5 text-center text-xs text-slate-400">
-                Belum memiliki akun?
-                <a asp-action="Register" class="text-emerald-400 hover:text-emerald-300 font-semibold underline underline-offset-2 ml-1">
-                    Daftar Mahasiswa Baru
+            <!-- Register Link -->
+            <div class="mt-4 pt-4 border-t border-zinc-100 text-center">
+                <span class="text-xs text-zinc-500">Belum punya akun civitas?</span>
+                <a asp-action="Register" class="text-xs font-semibold text-zinc-900 hover:underline ml-1">
+                    Daftar di sini
                 </a>
             </div>
         </div>
 
-        <!-- Footer Info -->
-        <div class="text-center text-slate-500 text-xs mt-6 font-mono">
-            SmartRoom ASP.NET Core 8 &bull; REST API &bull; PostgreSQL
+        <div class="text-center">
+            <a href="/" class="text-xs font-mono text-zinc-400 hover:text-zinc-700 transition-colors inline-flex items-center gap-1">
+                <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+                <span>Kembali ke Halaman Utama</span>
+            </a>
         </div>
     </div>
 
+    <!-- Scripts -->
     <script>
-        lucide.createIcons();
-
-        function togglePassword() {
-            const pwd = document.getElementById('inputPassword');
-            pwd.type = pwd.type === 'password' ? 'text' : 'password';
-        }
-
         function fillCreds(u, p) {
             document.getElementById('inputUsername').value = u;
             document.getElementById('inputPassword').value = p;
         }
+
+        function togglePassword() {
+            const pwd = document.getElementById('inputPassword');
+            const eye = document.getElementById('eyeIcon');
+            if (pwd.type === 'password') {
+                pwd.type = 'text';
+                eye.setAttribute('data-lucide', 'eye-off');
+            } else {
+                pwd.type = 'password';
+                eye.setAttribute('data-lucide', 'eye');
+            }
+            if (window.lucide) lucide.createIcons();
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            if (window.lucide) {
+                window.lucide.createIcons();
+            }
+        });
     </script>
 </body>
 </html>

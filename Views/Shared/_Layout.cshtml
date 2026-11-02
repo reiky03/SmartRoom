@@ -1,17 +1,17 @@
 @using System.Security.Claims
 <!DOCTYPE html>
-<html lang="id" class="h-full bg-slate-50">
+<html lang="id" class="h-full bg-[#FAFAFA]">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] — SmartRoom</title>
 
-    <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+    <!-- Google Fonts: Plus Jakarta Sans, Instrument Serif & JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Tailwind CSS (Tailwind Play CDN with custom config) -->
+    <!-- Tailwind CSS (Tailwind Play CDN with custom theme tokens) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -19,18 +19,17 @@
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        sans: ['Plus Jakarta Sans', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
                         mono: ['JetBrains Mono', 'monospace'],
                     },
                     colors: {
-                        brand: {
-                            50: '#f0fdf4',
-                            100: '#dcfce7',
-                            500: '#10b981',
-                            600: '#059669',
-                            700: '#047857',
-                            900: '#064e3b',
-                        }
+                        canvas: '#FAFAFA',
+                        surface: '#FFFFFF',
+                        borderSubtle: '#E4E4E7',
+                        textPrimary: '#09090B',
+                        textSecondary: '#71717A',
+                        textMuted: '#A1A1AA',
+                        accent: '#18181B',
                     }
                 }
             }
@@ -40,239 +39,286 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
-    <!-- Alpine.js for lightweight reactivity -->
+    <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
 
     <style>
         [x-cloak] { display: none !important; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; letter-spacing: -0.012em; }
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            letter-spacing: -0.018em;
+            background-color: #FAFAFA;
+            color: #09090B;
+        }
         .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .bg-grid-pattern {
+            background-image: radial-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+        /* Custom scrollbar for clean UI */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #FAFAFA;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #D4D4D8;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #A1A1AA;
+        }
     </style>
 </head>
-<body class="h-full antialiased text-slate-800 flex" x-data="{ sidebarOpen: false, profileDropdown: false }">
+<body class="min-h-full flex flex-col antialiased selection:bg-zinc-900 selection:text-white" x-data="{ mobileMenuOpen: false }">
 
-    <!-- Mobile Sidebar Backdrop -->
-    <div x-show="sidebarOpen" x-cloak 
-         class="fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-sm lg:hidden transition-opacity"
-         x-on:click="sidebarOpen = false"></div>
+    <!-- Ambient Subtle Radial Glow -->
+    <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <div class="absolute -top-40 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-gradient-to-b from-zinc-200/40 via-zinc-100/20 to-transparent blur-3xl opacity-60"></div>
+    </div>
 
-    <!-- Sidebar Navigation -->
-    <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" 
-           class="fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-slate-300 flex flex-col transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:inset-auto lg:flex-shrink-0">
-        
-        <!-- App Brand -->
-        <div class="h-16 flex items-center justify-between px-6 border-b border-slate-800">
-            <a asp-controller="Home" asp-action="Index" class="flex items-center gap-2.5 text-white no-underline">
-                <div class="w-8 h-8 rounded-lg bg-emerald-500 text-slate-950 flex items-center justify-center font-bold shadow-md shadow-emerald-500/20">
-                    <i data-lucide="building-2" class="w-4 h-4 text-white"></i>
-                </div>
-                <div class="flex flex-col">
-                    <span class="font-bold text-base tracking-tight text-white leading-none">SmartRoom</span>
-                    <span class="text-[10px] text-emerald-400 font-mono tracking-wider mt-1 uppercase">Campus Booking</span>
-                </div>
-            </a>
-            <button x-on:click="sidebarOpen = false" class="lg:hidden text-slate-400 hover:text-white p-1 rounded">
-                <i data-lucide="x" class="w-5 h-5"></i>
-            </button>
-        </div>
-
-        <!-- Navigation Links -->
-        <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-            <div class="px-3 pb-2 text-[11px] font-semibold text-slate-400 uppercase tracking-wider font-mono">
-                Menu Utama
-            </div>
-
-            <a asp-controller="Home" asp-action="Index" 
-               class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Home" ? "bg-slate-800 text-white shadow-sm border border-slate-700/60 font-semibold" : "text-slate-400 hover:bg-slate-800/60 hover:text-white")">
-                <i data-lucide="layout-dashboard" class="w-4 h-4 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Home" ? "text-emerald-400" : "")"></i>
-                <span>Dashboard</span>
-            </a>
-
-            <a asp-controller="Rooms" asp-action="Index" 
-               class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Rooms" ? "bg-slate-800 text-white shadow-sm border border-slate-700/60 font-semibold" : "text-slate-400 hover:bg-slate-800/60 hover:text-white")">
-                <i data-lucide="door-open" class="w-4 h-4 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Rooms" ? "text-emerald-400" : "")"></i>
-                <span>Katalog Ruangan</span>
-            </a>
-
-            <a asp-controller="Bookings" asp-action="Index" 
-               class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Bookings" && ViewContext.RouteData.Values["Action"]?.ToString() != "Manage" ? "bg-slate-800 text-white shadow-sm border border-slate-700/60 font-semibold" : "text-slate-400 hover:bg-slate-800/60 hover:text-white")">
-                <i data-lucide="calendar" class="w-4 h-4 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Bookings" && ViewContext.RouteData.Values["Action"]?.ToString() != "Manage" ? "text-emerald-400" : "")"></i>
-                <span>Jadwal Peminjaman</span>
-            </a>
-
-            @if (User.IsInRole("Admin"))
-            {
-                <div class="pt-5 px-3 pb-2 text-[11px] font-semibold text-slate-400 uppercase tracking-wider font-mono flex items-center justify-between">
-                    <span>Manajemen Admin</span>
-                    <span class="px-1.5 py-0.5 rounded text-[9px] bg-rose-500/20 text-rose-300 border border-rose-500/30">RBAC</span>
-                </div>
-
-                <a asp-controller="Bookings" asp-action="Manage" 
-                   class="flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Bookings" && ViewContext.RouteData.Values["Action"]?.ToString() == "Manage" ? "bg-slate-800 text-white shadow-sm border border-slate-700/60 font-semibold" : "text-slate-400 hover:bg-slate-800/60 hover:text-white")">
-                    <div class="flex items-center gap-3">
-                        <i data-lucide="shield-check" class="w-4 h-4 text-rose-400"></i>
-                        <span>Approval Antrean</span>
-                    </div>
-                    <span class="px-1.5 py-0.5 text-xs font-mono font-semibold bg-amber-400/20 text-amber-300 rounded border border-amber-400/30">Admin</span>
-                </a>
-
-                <a asp-controller="Rooms" asp-action="Create" 
-                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-slate-400 hover:bg-slate-800/60 hover:text-white">
-                    <i data-lucide="plus-circle" class="w-4 h-4 text-slate-400"></i>
-                    <span>Tambah Ruangan</span>
-                </a>
-            }
-
-            <div class="pt-5 px-3 pb-2 text-[11px] font-semibold text-slate-400 uppercase tracking-wider font-mono">
-                Developer &amp; API
-            </div>
-
-            <a href="/swagger" target="_blank" 
-               class="flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-slate-400 hover:bg-slate-800/60 hover:text-white">
-                <div class="flex items-center gap-3">
-                    <i data-lucide="code-2" class="w-4 h-4 text-sky-400"></i>
-                    <span>Swagger OpenAPI</span>
-                </div>
-                <i data-lucide="external-link" class="w-3.5 h-3.5 text-slate-500"></i>
-            </a>
-        </nav>
-
-        <!-- Current User Profile Footer in Sidebar -->
-        <div class="p-3 border-t border-slate-800 bg-slate-950/40">
-            @if (User.Identity?.IsAuthenticated == true)
-            {
-                var role = User.FindFirstValue(ClaimTypes.Role) ?? "Student";
-                var initials = User.FindFirst("AvatarInitials")?.Value ?? "SR";
-                var dept = User.FindFirst("Department")?.Value ?? "Civitas";
-
-                <div class="flex items-center justify-between p-2 rounded-lg bg-slate-900 border border-slate-800">
-                    <div class="flex items-center gap-2.5 overflow-hidden">
-                        <div class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold text-xs font-mono flex-shrink-0">
-                            @initials
+    <!-- Main Navigation Header (Modulify / Linear Style Sticky Header) -->
+    <header class="sticky top-0 z-40 w-full bg-[#FAFAFA]/85 backdrop-blur-md border-b border-zinc-200/80">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 gap-4">
+                
+                <!-- Left: Brand Logo & Navigation Links -->
+                <div class="flex items-center gap-8">
+                    <!-- Brand -->
+                    <a asp-controller="Home" asp-action="Index" class="flex items-center gap-2.5 text-zinc-900 group">
+                        <div class="w-8 h-8 rounded-lg bg-zinc-900 text-white flex items-center justify-center font-bold text-sm shadow-sm group-hover:scale-105 transition-transform duration-200">
+                            <span class="font-mono tracking-tighter">S</span>
                         </div>
-                        <div class="truncate">
-                            <div class="text-xs font-semibold text-white truncate">@User.Identity.Name</div>
-                            <div class="text-[11px] text-slate-400 truncate">@dept</div>
-                        </div>
-                    </div>
-                    <form asp-controller="Account" asp-action="Logout" method="post" class="m-0 flex-shrink-0">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="p-1.5 text-slate-400 hover:text-rose-400 rounded hover:bg-slate-800 transition-colors" title="Keluar / Logout">
-                            <i data-lucide="log-out" class="w-4 h-4"></i>
-                        </button>
-                    </form>
-                </div>
-            }
-            else
-            {
-                <a asp-controller="Account" asp-action="Login" class="flex items-center justify-center gap-2 w-full py-2 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition-colors shadow">
-                    <i data-lucide="log-in" class="w-4 h-4"></i>
-                    <span>Masuk ke Akun</span>
-                </a>
-            }
-        </div>
-    </aside>
-
-    <!-- Main Content Area -->
-    <div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
-        <!-- Top Navbar -->
-        <header class="h-16 bg-white border-b border-slate-200/80 sticky top-0 z-30 px-4 lg:px-8 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <button x-on:click="sidebarOpen = true" class="lg:hidden p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg">
-                    <i data-lucide="menu" class="w-5 h-5"></i>
-                </button>
-                <div class="hidden sm:flex items-center gap-2 text-xs text-slate-400 font-mono">
-                    <span>SISTEM INFORMASI PEMINJAMAN RUANGAN</span>
-                    <span>/</span>
-                    <span class="text-slate-700 font-semibold">@ViewData["Title"]</span>
-                </div>
-            </div>
-
-            <!-- Right Actions -->
-            <div class="flex items-center gap-3">
-                <a asp-controller="Bookings" asp-action="Create" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold shadow-sm transition-all">
-                    <i data-lucide="plus" class="w-4 h-4"></i>
-                    <span>Pinjam Ruangan</span>
-                </a>
-
-                @if (User.Identity?.IsAuthenticated == true)
-                {
-                    var role = User.FindFirstValue(ClaimTypes.Role) ?? "Student";
-                    var roleColor = role == "Admin" ? "bg-rose-50 text-rose-700 border-rose-200" : (role == "Staff" ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-emerald-50 text-emerald-700 border-emerald-200");
-
-                    <div class="relative" x-data="{ open: false }">
-                        <button x-on:click="open = !open" class="flex items-center gap-2.5 p-1.5 rounded-lg hover:bg-slate-100 transition-colors">
-                            <span class="px-2 py-0.5 rounded text-[11px] font-mono font-semibold border @roleColor">
-                                @role
+                        <div class="flex items-baseline gap-1.5">
+                            <span class="font-bold text-base tracking-tight text-zinc-900">SmartRoom</span>
+                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-mono text-zinc-500 bg-zinc-100 border border-zinc-200/80 font-medium">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> v2.4
                             </span>
-                            <span class="text-xs font-medium text-slate-700 hidden md:inline">@User.Identity.Name</span>
-                            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400"></i>
-                        </button>
-
-                        <div x-show="open" x-on:click.outside="open = false" x-cloak
-                             class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-slate-200/80 py-1.5 text-xs text-slate-700 z-50">
-                            <div class="px-3 py-2 border-b border-slate-100">
-                                <div class="font-semibold text-slate-900">@User.Identity.Name</div>
-                                <div class="text-[11px] text-slate-500 font-mono truncate">@User.FindFirstValue(ClaimTypes.Email)</div>
-                            </div>
-                            <div class="px-3 py-1.5 text-[10px] uppercase font-mono text-slate-400 font-semibold tracking-wider">
-                                Role Akses: @role
-                            </div>
-                            <form asp-controller="Account" asp-action="Logout" method="post" class="m-0">
-                                @Html.AntiForgeryToken()
-                                <button type="submit" class="w-full text-left px-3 py-2 text-rose-600 hover:bg-rose-50 flex items-center gap-2 transition-colors">
-                                    <i data-lucide="log-out" class="w-4 h-4"></i>
-                                    <span>Keluar (Logout)</span>
-                                </button>
-                            </form>
                         </div>
-                    </div>
-                }
-                else
+                    </a>
+
+                    <!-- Desktop Nav Links (Clean Segmented Style) -->
+                    <nav class="hidden md:flex items-center gap-1 bg-zinc-100/80 p-1 rounded-xl border border-zinc-200/60 text-xs font-medium text-zinc-600">
+                        <a asp-controller="Home" asp-action="Index" 
+                           class="px-3 py-1.5 rounded-lg transition-all @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Home" ? "bg-white text-zinc-900 shadow-sm font-semibold" : "hover:text-zinc-900 hover:bg-white/50")">
+                            Dashboard
+                        </a>
+                        <a asp-controller="Rooms" asp-action="Index" 
+                           class="px-3 py-1.5 rounded-lg transition-all @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Rooms" ? "bg-white text-zinc-900 shadow-sm font-semibold" : "hover:text-zinc-900 hover:bg-white/50")">
+                            Katalog Ruangan
+                        </a>
+                        <a asp-controller="Bookings" asp-action="Index" 
+                           class="px-3 py-1.5 rounded-lg transition-all @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Bookings" && ViewContext.RouteData.Values["Action"]?.ToString() != "Manage" ? "bg-white text-zinc-900 shadow-sm font-semibold" : "hover:text-zinc-900 hover:bg-white/50")">
+                            Jadwal Peminjaman
+                        </a>
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <a asp-controller="Bookings" asp-action="Manage" 
+                               class="px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Bookings" && ViewContext.RouteData.Values["Action"]?.ToString() == "Manage" ? "bg-white text-zinc-900 shadow-sm font-semibold" : "hover:text-zinc-900 hover:bg-white/50")">
+                                <span>Approval Queue</span>
+                                <span class="px-1.5 py-0.2 rounded text-[10px] font-mono bg-zinc-900 text-white font-bold">Admin</span>
+                            </a>
+                        }
+                    </nav>
+                </div>
+
+                <!-- Right: Action CTA & User Menu -->
+                <div class="flex items-center gap-2.5">
+                    
+                    <!-- Swagger Doc Link -->
+                    <a href="/swagger" target="_blank" 
+                       class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 transition-colors border border-transparent hover:border-zinc-200">
+                        <i data-lucide="terminal" class="w-3.5 h-3.5 text-zinc-500"></i>
+                        <span>API Docs</span>
+                        <i data-lucide="arrow-up-right" class="w-3 h-3 text-zinc-400"></i>
+                    </a>
+
+                    <!-- Primary Booking Button -->
+                    <a asp-controller="Bookings" asp-action="Create" 
+                       class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-medium shadow-sm transition-all active:scale-[0.98]">
+                        <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                        <span>Pinjam Ruangan</span>
+                    </a>
+
+                    <!-- User Account / RBAC Dropdown -->
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        var role = User.FindFirstValue(ClaimTypes.Role) ?? "Student";
+                        var initials = User.FindFirst("AvatarInitials")?.Value ?? "SR";
+                        var roleBadgeClass = role switch {
+                            "Admin" => "bg-rose-50 text-rose-700 border-rose-200/80",
+                            "Staff" => "bg-blue-50 text-blue-700 border-blue-200/80",
+                            _ => "bg-emerald-50 text-emerald-700 border-emerald-200/80"
+                        };
+
+                        <div class="relative" x-data="{ userMenu: false }">
+                            <button x-on:click="userMenu = !userMenu" 
+                                    class="flex items-center gap-2 p-1.5 pl-2 rounded-xl border border-zinc-200/80 bg-white hover:bg-zinc-50 transition-colors shadow-sm">
+                                <div class="w-6 h-6 rounded-md bg-zinc-100 text-zinc-800 font-mono text-[11px] font-bold flex items-center justify-center border border-zinc-200">
+                                    @initials
+                                </div>
+                                <div class="hidden lg:flex flex-col text-left">
+                                    <span class="text-xs font-semibold text-zinc-800 leading-none">@User.Identity.Name</span>
+                                </div>
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold border @roleBadgeClass">
+                                    @role
+                                </span>
+                                <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-zinc-400"></i>
+                            </button>
+
+                            <!-- Profile Flyout -->
+                            <div x-show="userMenu" x-on:click.outside="userMenu = false" x-cloak
+                                 class="absolute right-0 mt-2 w-72 bg-white rounded-xl shadow-xl border border-zinc-200/80 py-2 text-xs text-zinc-700 z-50">
+                                
+                                <!-- User Information Header -->
+                                <div class="px-4 py-2.5 border-b border-zinc-100">
+                                    <div class="text-[11px] font-mono text-zinc-400 uppercase tracking-wider mb-1">Akun Masuk</div>
+                                    <div class="font-bold text-zinc-900 text-sm">@User.Identity.Name</div>
+                                    <div class="text-zinc-500 font-mono text-[11px] truncate">@User.FindFirstValue(ClaimTypes.Email)</div>
+                                    <div class="mt-1.5 flex items-center gap-1.5">
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-mono font-semibold border @roleBadgeClass">
+                                            Peran: @role
+                                        </span>
+                                        <span class="text-[10px] text-zinc-400 font-mono">&bull; @User.FindFirst("Department")?.Value</span>
+                                    </div>
+                                </div>
+
+                                <!-- Quick RBAC Switcher for Evaluation / Testing -->
+                                <div class="px-4 py-2 border-b border-zinc-100 bg-zinc-50/50">
+                                    <div class="text-[10px] font-mono uppercase tracking-wider text-zinc-400 font-semibold mb-2">
+                                        Ganti Role Pengujian (1-Klik)
+                                    </div>
+                                    <div class="grid grid-cols-3 gap-1.5">
+                                        <!-- Switch to Admin -->
+                                        <form asp-controller="Account" asp-action="QuickSwitch" method="post" class="m-0">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="targetRole" value="admin" />
+                                            <button type="submit" class="w-full py-1.5 px-2 rounded-lg text-[10px] font-mono font-semibold transition-all text-center @(role == "Admin" ? "bg-rose-100 text-rose-800 border border-rose-300 shadow-xs" : "bg-white text-zinc-600 border border-zinc-200 hover:bg-zinc-100")">
+                                                👑 Admin
+                                            </button>
+                                        </form>
+
+                                        <!-- Switch to Staff -->
+                                        <form asp-controller="Account" asp-action="QuickSwitch" method="post" class="m-0">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="targetRole" value="staff" />
+                                            <button type="submit" class="w-full py-1.5 px-2 rounded-lg text-[10px] font-mono font-semibold transition-all text-center @(role == "Staff" ? "bg-blue-100 text-blue-800 border border-blue-300 shadow-xs" : "bg-white text-zinc-600 border border-zinc-200 hover:bg-zinc-100")">
+                                                👔 Staff
+                                            </button>
+                                        </form>
+
+                                        <!-- Switch to Student -->
+                                        <form asp-controller="Account" asp-action="QuickSwitch" method="post" class="m-0">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="targetRole" value="student" />
+                                            <button type="submit" class="w-full py-1.5 px-2 rounded-lg text-[10px] font-mono font-semibold transition-all text-center @(role == "Student" ? "bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-xs" : "bg-white text-zinc-600 border border-zinc-200 hover:bg-zinc-100")">
+                                                🎓 Student
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+
+                                <!-- Logout Action -->
+                                <div class="px-2 pt-1">
+                                    <form asp-controller="Account" asp-action="Logout" method="post" class="m-0">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="w-full text-left px-3 py-2 rounded-lg text-rose-600 hover:bg-rose-50 flex items-center gap-2 transition-colors font-medium">
+                                            <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+                                            <span>Keluar dari Akun</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <a asp-controller="Account" asp-action="Login" 
+                           class="px-3 py-2 rounded-lg text-xs font-semibold text-zinc-700 hover:bg-zinc-100 border border-zinc-200/80 transition-colors">
+                            Masuk
+                        </a>
+                    }
+
+                    <!-- Mobile Menu Hamburger -->
+                    <button x-on:click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden p-2 rounded-lg text-zinc-600 hover:bg-zinc-100">
+                        <i data-lucide="menu" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mobile Navigation Drawer -->
+            <div x-show="mobileMenuOpen" x-cloak class="md:hidden py-3 border-t border-zinc-200/80 space-y-1">
+                <a asp-controller="Home" asp-action="Index" class="block px-3 py-2 rounded-lg text-xs font-medium text-zinc-700 hover:bg-zinc-100">
+                    Dashboard
+                </a>
+                <a asp-controller="Rooms" asp-action="Index" class="block px-3 py-2 rounded-lg text-xs font-medium text-zinc-700 hover:bg-zinc-100">
+                    Katalog Ruangan
+                </a>
+                <a asp-controller="Bookings" asp-action="Index" class="block px-3 py-2 rounded-lg text-xs font-medium text-zinc-700 hover:bg-zinc-100">
+                    Jadwal Peminjaman
+                </a>
+                @if (User.IsInRole("Admin"))
                 {
-                    <a asp-controller="Account" asp-action="Login" class="text-xs font-semibold px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 border border-slate-200">
-                        Masuk
+                    <a asp-controller="Bookings" asp-action="Manage" class="block px-3 py-2 rounded-lg text-xs font-medium text-zinc-700 hover:bg-zinc-100">
+                        Approval Queue (Admin)
                     </a>
                 }
+                <a href="/swagger" target="_blank" class="block px-3 py-2 rounded-lg text-xs font-mono text-zinc-500 hover:bg-zinc-100">
+                    API Docs (Swagger) &rarr;
+                </a>
             </div>
-        </header>
+        </div>
+    </header>
 
-        <!-- Main Workspace Body -->
-        <main class="flex-1 p-4 lg:p-8 max-w-7xl w-full mx-auto">
-            <!-- Toast / Flash Messages -->
-            @if (TempData["SuccessMessage"] != null)
-            {
-                <div class="mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-start gap-3 shadow-sm">
-                    <i data-lucide="check-circle" class="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5"></i>
-                    <div class="flex-1 text-sm font-medium">@TempData["SuccessMessage"]</div>
+    <!-- Main App Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
+        <!-- Toast / Flash Feedback Banner -->
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="mb-6 p-3.5 rounded-xl bg-[#EDF3EC] border border-[#BBF7D0] text-[#166534] flex items-center justify-between text-xs font-medium shadow-xs">
+                <div class="flex items-center gap-2.5">
+                    <i data-lucide="check-circle-2" class="w-4 h-4 text-[#166534] flex-shrink-0"></i>
+                    <span>@TempData["SuccessMessage"]</span>
                 </div>
-            }
+                <button onclick="this.parentElement.remove()" class="text-[#166534]/70 hover:text-[#166534] p-1">
+                    <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                </button>
+            </div>
+        }
 
-            @if (TempData["ErrorMessage"] != null)
-            {
-                <div class="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 flex items-start gap-3 shadow-sm">
-                    <i data-lucide="alert-octagon" class="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5"></i>
-                    <div class="flex-1 text-sm font-medium">@TempData["ErrorMessage"]</div>
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="mb-6 p-3.5 rounded-xl bg-[#FEE2E2] border border-[#FECACA] text-[#991B1B] flex items-center justify-between text-xs font-medium shadow-xs">
+                <div class="flex items-center gap-2.5">
+                    <i data-lucide="alert-circle" class="w-4 h-4 text-[#991B1B] flex-shrink-0"></i>
+                    <span>@TempData["ErrorMessage"]</span>
                 </div>
-            }
+                <button onclick="this.parentElement.remove()" class="text-[#991B1B]/70 hover:text-[#991B1B] p-1">
+                    <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                </button>
+            </div>
+        }
 
-            @RenderBody()
-        </main>
+        @RenderBody()
+    </main>
 
-        <!-- Modern Clean Footer -->
-        <footer class="mt-auto py-4 px-4 lg:px-8 bg-white border-t border-slate-200 text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-3">
+    <!-- Sleek Minimalist Footer -->
+    <footer class="mt-auto border-t border-zinc-200/80 bg-white/50 py-6 text-xs text-zinc-500">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div class="flex items-center gap-2">
-                <span class="font-bold text-slate-800">SmartRoom</span>
+                <span class="font-bold text-zinc-900">SmartRoom</span>
                 <span>&bull;</span>
-                <span>ASP.NET Core 8 &bull; EF Core 8 &bull; Enterprise RBAC</span>
+                <span>Campus &amp; Office Facility Reservation System</span>
             </div>
-            <div class="flex items-center gap-4 font-mono text-[11px]">
-                <a href="/swagger" target="_blank" class="hover:text-slate-900 transition-colors">REST API Docs</a>
+            <div class="flex items-center gap-4 font-mono text-[11px] text-zinc-500">
+                <a href="/swagger" target="_blank" class="hover:text-zinc-900 transition-colors">Swagger API</a>
                 <span>&bull;</span>
-                <span class="text-emerald-600 font-semibold">PostgreSQL / SQLite Ready</span>
+                <span class="text-zinc-700">ASP.NET Core 8 &bull; EF Core 8 &bull; RBAC</span>
             </div>
-        </footer>
-    </div>
+        </div>
+    </footer>
 
     <!-- Initialize Lucide Icons -->
     <script>

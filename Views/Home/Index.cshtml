@@ -1,338 +1,468 @@
 @model SmartRoom.DTOs.DashboardStatsDto
 @{
-    ViewData["Title"] = "Dashboard";
+    ViewData["Title"] = "Operations Dashboard";
     var todayStr = DateTime.Now.ToString("dddd, dd MMMM yyyy");
 }
 
-<!-- Welcome / Header Section -->
-<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-6 border-b border-slate-200">
-    <div>
-        <div class="flex items-center gap-2 text-xs font-mono text-slate-500 mb-1">
-            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-semibold">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> LIVE SYSTEM
-            </span>
-            <span>&bull;</span>
-            <span>@todayStr</span>
+<div class="space-y-8" x-data="{ tableFilter: 'all', searchQuery: '', activeTooltip: null }">
+
+    <!-- Hero Header / Operations Ticker -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-zinc-200/80">
+        <div>
+            <div class="flex items-center gap-2 mb-2">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-medium bg-[#EDF3EC] text-[#166534] border border-[#BBF7D0]">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#166534] animate-pulse"></span>
+                    SISTEM OPERASIONAL AKTIF
+                </span>
+                <span class="text-zinc-300">&bull;</span>
+                <span class="text-xs font-mono text-zinc-500">@todayStr</span>
+            </div>
+            <h1 class="text-3xl font-extrabold tracking-tight text-zinc-950 sm:text-4xl">
+                SmartRoom Operations
+            </h1>
+            <p class="text-sm text-zinc-500 mt-1 max-w-2xl">
+                Platform reservasi fasilitas kampus terintegrasi dengan validasi pencegahan jadwal tumpang tindih (anti-conflict) dan alur persetujuan bertingkat.
+            </p>
         </div>
-        <h1 class="text-2xl font-bold tracking-tight text-slate-900">
-            SmartRoom Operations Dashboard
-        </h1>
-        <p class="text-xs text-slate-500 mt-0.5">Monitoring peminjaman ruangan kampus, jadwal terisi, dan status alur persetujuan</p>
+
+        <div class="flex items-center gap-2.5 flex-shrink-0">
+            <a asp-controller="Bookings" asp-action="Create" 
+               class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-medium shadow-sm transition-all active:scale-[0.98]">
+                <i data-lucide="calendar-plus" class="w-4 h-4"></i>
+                <span>Ajukan Peminjaman</span>
+            </a>
+            @if (User.IsInRole("Admin"))
+            {
+                <a asp-controller="Bookings" asp-action="Manage" 
+                   class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white hover:bg-zinc-50 text-zinc-800 text-xs font-medium border border-zinc-200/80 shadow-xs transition-all">
+                    <i data-lucide="shield-check" class="w-4 h-4 text-rose-600"></i>
+                    <span>Antrean (@Model.PendingBookingsCount)</span>
+                </a>
+            }
+        </div>
     </div>
 
-    <div class="flex items-center gap-2">
-        <a asp-controller="Bookings" asp-action="Create" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-sm shadow-emerald-600/20 transition-all">
-            <i data-lucide="plus" class="w-4 h-4"></i>
-            <span>Ajukan Peminjaman</span>
-        </a>
-        @if (User.IsInRole("Admin"))
+    <!-- Bento Grid KPI Cards (Apple/Linear Style Modular Cards) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <!-- Card 1: Active Rooms -->
+        <div class="group relative bg-white border border-zinc-200/80 rounded-2xl p-5 hover:border-zinc-300 hover:shadow-[0_2px_12px_rgba(0,0,0,0.03)] transition-all duration-200 flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between text-zinc-400 mb-3">
+                    <span class="text-[11px] font-mono uppercase tracking-wider text-zinc-500 font-semibold">Ruangan Aktif</span>
+                    <div class="w-7 h-7 rounded-lg bg-zinc-100 text-zinc-700 flex items-center justify-center">
+                        <i data-lucide="door-open" class="w-3.5 h-3.5"></i>
+                    </div>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <span class="text-3xl font-extrabold text-zinc-950 font-mono tracking-tight">@Model.TotalActiveRooms</span>
+                    <span class="text-xs text-zinc-400 font-mono">Unit Siap Pakai</span>
+                </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between text-xs">
+                <span class="inline-flex items-center gap-1 text-[#166534] font-medium">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#166534]"></span> 100% Terverifikasi
+                </span>
+                <a asp-controller="Rooms" asp-action="Index" class="text-zinc-500 hover:text-zinc-900 font-mono text-[11px] flex items-center gap-0.5 transition-colors">
+                    <span>Katalog</span>
+                    <i data-lucide="chevron-right" class="w-3 h-3"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Card 2: Today's Bookings -->
+        <div class="group relative bg-white border border-zinc-200/80 rounded-2xl p-5 hover:border-zinc-300 hover:shadow-[0_2px_12px_rgba(0,0,0,0.03)] transition-all duration-200 flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between text-zinc-400 mb-3">
+                    <span class="text-[11px] font-mono uppercase tracking-wider text-zinc-500 font-semibold">Agenda Hari Ini</span>
+                    <div class="w-7 h-7 rounded-lg bg-zinc-100 text-zinc-700 flex items-center justify-center">
+                        <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+                    </div>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <span class="text-3xl font-extrabold text-zinc-950 font-mono tracking-tight">@Model.TodayBookingsCount</span>
+                    <span class="text-xs text-zinc-400 font-mono">Sesi Terdaftar</span>
+                </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between text-xs text-zinc-500">
+                <span class="font-mono text-[11px]">Rentang 08:00 - 18:00</span>
+                <i data-lucide="clock" class="w-3.5 h-3.5 text-zinc-400"></i>
+            </div>
+        </div>
+
+        <!-- Card 3: Pending Approvals -->
+        <div class="group relative bg-white border border-zinc-200/80 rounded-2xl p-5 hover:border-zinc-300 hover:shadow-[0_2px_12px_rgba(0,0,0,0.03)] transition-all duration-200 flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between text-zinc-400 mb-3">
+                    <span class="text-[11px] font-mono uppercase tracking-wider text-zinc-500 font-semibold">Menunggu Review</span>
+                    <div class="w-7 h-7 rounded-lg bg-[#FEF9C3] text-[#854D0E] flex items-center justify-center">
+                        <i data-lucide="hourglass" class="w-3.5 h-3.5"></i>
+                    </div>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <span class="text-3xl font-extrabold text-[#854D0E] font-mono tracking-tight">@Model.PendingBookingsCount</span>
+                    <span class="text-xs px-2 py-0.5 rounded-full bg-[#FEF9C3] text-[#854D0E] font-mono text-[11px] font-semibold">Pending</span>
+                </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between text-xs">
+                @if (User.IsInRole("Admin"))
+                {
+                    <a asp-controller="Bookings" asp-action="Manage" class="text-zinc-900 hover:text-rose-700 font-semibold flex items-center gap-1 font-mono text-[11px] transition-colors">
+                        <span>Review Antrean</span>
+                        <i data-lucide="arrow-right" class="w-3 h-3"></i>
+                    </a>
+                }
+                else
+                {
+                    <span class="text-zinc-400 font-mono text-[11px]">Oleh Admin Kampus</span>
+                }
+            </div>
+        </div>
+
+        <!-- Card 4: Confirmed / Approved -->
+        <div class="group relative bg-white border border-zinc-200/80 rounded-2xl p-5 hover:border-zinc-300 hover:shadow-[0_2px_12px_rgba(0,0,0,0.03)] transition-all duration-200 flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between text-zinc-400 mb-3">
+                    <span class="text-[11px] font-mono uppercase tracking-wider text-zinc-500 font-semibold">Terkonfirmasi</span>
+                    <div class="w-7 h-7 rounded-lg bg-[#EDF3EC] text-[#166534] flex items-center justify-center">
+                        <i data-lucide="check-check" class="w-3.5 h-3.5"></i>
+                    </div>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <span class="text-3xl font-extrabold text-[#166534] font-mono tracking-tight">@Model.ApprovedBookingsCount</span>
+                    <span class="text-xs px-2 py-0.5 rounded-full bg-[#EDF3EC] text-[#166534] font-mono text-[11px] font-semibold">Approved</span>
+                </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between text-xs text-zinc-400 font-mono text-[11px]">
+                <span>Anti-Bentrok Validated</span>
+                <i data-lucide="shield-check" class="w-3.5 h-3.5 text-[#166534]"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Visual Interactive Occupancy Matrix (Gantt Chart 08:00 - 18:00) -->
+    <div class="bg-white border border-zinc-200/80 rounded-2xl p-6 shadow-xs">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div>
+                <div class="flex items-center gap-2">
+                    <h2 class="text-base font-bold text-zinc-900 tracking-tight">
+                        Matriks Keterisian Ruangan Hari Ini
+                    </h2>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-zinc-100 text-zinc-600 font-medium border border-zinc-200/60">
+                        08:00 — 18:00
+                    </span>
+                </div>
+                <p class="text-xs text-zinc-500 mt-0.5">Visualisasi alokasi jam pakai per ruangan untuk verifikasi slot kosong</p>
+            </div>
+
+            <!-- Legend Pills -->
+            <div class="flex items-center gap-3 text-[11px] font-mono">
+                <span class="inline-flex items-center gap-1.5 text-zinc-700">
+                    <span class="w-2.5 h-2.5 rounded-sm bg-[#166534]"></span> Disetujui
+                </span>
+                <span class="inline-flex items-center gap-1.5 text-zinc-700">
+                    <span class="w-2.5 h-2.5 rounded-sm bg-[#854D0E]"></span> Pending
+                </span>
+                <span class="inline-flex items-center gap-1.5 text-zinc-400">
+                    <span class="w-2.5 h-2.5 rounded-sm bg-zinc-200"></span> Kosong
+                </span>
+            </div>
+        </div>
+
+        <!-- Matrix Timeline Grid -->
+        <div class="overflow-x-auto pb-2">
+            <div class="min-w-[760px]">
+                
+                <!-- Hour Headers (08:00 to 18:00) -->
+                <div class="flex text-[11px] font-mono text-zinc-400 mb-2 pl-[220px]">
+                    @for (int h = 8; h <= 17; h++)
+                    {
+                        <div class="flex-1 border-l border-zinc-200/80 pl-1.5 text-left select-none">
+                            @($"{h:D2}:00")
+                        </div>
+                    }
+                </div>
+
+                <!-- Room Rows -->
+                @{
+                    var roomsGrouped = Model.TodayBookings
+                        .Where(b => b.Room != null)
+                        .GroupBy(b => b.Room!)
+                        .ToList();
+                }
+
+                @if (roomsGrouped.Any())
+                {
+                    <div class="space-y-3">
+                        @foreach (var group in roomsGrouped)
+                        {
+                            var room = group.Key;
+                            <div class="flex items-center group/row">
+                                <!-- Room Identifier Left Column -->
+                                <div class="w-[220px] flex-shrink-0 pr-4">
+                                    <div class="font-semibold text-xs text-zinc-900 truncate" title="@room.Name">@room.Name</div>
+                                    <div class="text-[10px] font-mono text-zinc-400 flex items-center gap-1 mt-0.5">
+                                        <span class="px-1.5 py-0.2 rounded bg-zinc-100 text-zinc-600 border border-zinc-200/60 font-semibold">@room.RoomCode</span>
+                                        <span>&bull;</span>
+                                        <span>@room.Capacity Kursi</span>
+                                    </div>
+                                </div>
+
+                                <!-- Timeline Runway Track -->
+                                <div class="relative flex-1 h-9 bg-zinc-50 rounded-lg border border-zinc-200/80 overflow-hidden">
+                                    <!-- Hourly Guidelines -->
+                                    <div class="absolute inset-0 flex pointer-events-none">
+                                        @for (int i = 0; i < 10; i++)
+                                        {
+                                            <div class="flex-1 border-r border-dashed border-zinc-200/60"></div>
+                                        }
+                                    </div>
+
+                                    <!-- Render Booked Slot Blocks -->
+                                    @foreach (var b in group)
+                                    {
+                                        if (b.Status != SmartRoom.Models.Enums.BookingStatus.Rejected && b.Status != SmartRoom.Models.Enums.BookingStatus.Cancelled)
+                                        {
+                                            var dayStart = DateTime.Today.AddHours(8);
+                                            var totalMinutes = 10 * 60; // 600 mins
+                                            var startMin = Math.Max(0, (b.StartTime - dayStart).TotalMinutes);
+                                            var durationMin = (b.EndTime - b.StartTime).TotalMinutes;
+                                            var leftPct = (startMin / totalMinutes) * 100;
+                                            var widthPct = Math.Min(100 - leftPct, (durationMin / totalMinutes) * 100);
+
+                                            var isApproved = b.Status == SmartRoom.Models.Enums.BookingStatus.Approved;
+                                            var blockClasses = isApproved 
+                                                ? "bg-[#EDF3EC] border border-[#BBF7D0] text-[#166534] hover:bg-[#DCFCE7]" 
+                                                : "bg-[#FEF9C3] border border-[#FEF08A] text-[#854D0E] hover:bg-[#FEF08A]";
+
+                                            <div class="absolute inset-y-1 rounded-md px-2 flex items-center justify-between text-[11px] font-mono font-medium truncate @blockClasses transition-all cursor-pointer shadow-xs z-10"
+                                                 style="left: @leftPct.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)%; width: @widthPct.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)%;"
+                                                 x-on:mouseenter="activeTooltip = '@b.BookingReference'"
+                                                 x-on:mouseleave="activeTooltip = null">
+                                                <div class="truncate flex items-center gap-1">
+                                                    <span class="font-bold">@b.StartTime.ToString("HH:mm")-@b.EndTime.ToString("HH:mm")</span>
+                                                    <span class="opacity-75 truncate hidden lg:inline">(@b.BorrowerName)</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Dynamic Clean Popover Tooltip -->
+                                            <div x-show="activeTooltip === '@b.BookingReference'" x-cloak
+                                                 class="fixed z-50 p-3 bg-zinc-900 text-white rounded-xl shadow-xl text-xs max-w-xs pointer-events-none transform -translate-y-full -mt-2 font-sans border border-zinc-800"
+                                                 style="left: max(16px, min(calc(@leftPct% + 220px), calc(100vw - 320px)));">
+                                                <div class="flex items-center justify-between gap-3 mb-1">
+                                                    <span class="font-mono text-[10px] text-zinc-400">@b.BookingReference</span>
+                                                    <span class="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold uppercase @(isApproved ? "bg-emerald-500/20 text-emerald-300" : "bg-amber-500/20 text-amber-300")">
+                                                        @b.Status
+                                                    </span>
+                                                </div>
+                                                <div class="font-semibold text-white">@b.BorrowerName</div>
+                                                <div class="text-[11px] text-zinc-400 font-mono">@b.StartTime.ToString("HH:mm") — @b.EndTime.ToString("HH:mm")</div>
+                                                <div class="text-[11px] text-zinc-300 mt-1 line-clamp-2">@b.Purpose</div>
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="py-10 text-center text-xs text-zinc-400 font-mono border-t border-zinc-100">
+                        Tidak ada aktivitas jadwal peminjaman pada hari ini.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Modulify-Style Filterable Schedule Table & Feed -->
+    <div class="bg-white border border-zinc-200/80 rounded-2xl overflow-hidden shadow-xs">
+        
+        <!-- Table Toolbar: Segmented Tabs + Search Filter -->
+        <div class="p-5 border-b border-zinc-200/80 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            
+            <!-- Segmented Filter Tabs -->
+            <div class="flex items-center gap-1 bg-zinc-100 p-1 rounded-xl border border-zinc-200/60 text-xs font-medium text-zinc-600 w-fit">
+                <button type="button" x-on:click="tableFilter = 'all'" 
+                        :class="tableFilter === 'all' ? 'bg-white text-zinc-900 shadow-xs font-semibold' : 'hover:text-zinc-900'"
+                        class="px-3 py-1.5 rounded-lg transition-all">
+                    Semua (@Model.TodayBookings.Count())
+                </button>
+                <button type="button" x-on:click="tableFilter = 'Approved'" 
+                        :class="tableFilter === 'Approved' ? 'bg-white text-zinc-900 shadow-xs font-semibold' : 'hover:text-zinc-900'"
+                        class="px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#166534]"></span>
+                    Disetujui (@Model.TodayBookings.Count(b => b.Status == SmartRoom.Models.Enums.BookingStatus.Approved))
+                </button>
+                <button type="button" x-on:click="tableFilter = 'Pending'" 
+                        :class="tableFilter === 'Pending' ? 'bg-white text-zinc-900 shadow-xs font-semibold' : 'hover:text-zinc-900'"
+                        class="px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#854D0E]"></span>
+                    Pending (@Model.TodayBookings.Count(b => b.Status == SmartRoom.Models.Enums.BookingStatus.Pending))
+                </button>
+                <button type="button" x-on:click="tableFilter = 'Rejected'" 
+                        :class="tableFilter === 'Rejected' ? 'bg-white text-zinc-900 shadow-xs font-semibold' : 'hover:text-zinc-900'"
+                        class="px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#991B1B]"></span>
+                    Ditolak (@Model.TodayBookings.Count(b => b.Status == SmartRoom.Models.Enums.BookingStatus.Rejected))
+                </button>
+            </div>
+
+            <!-- Instant Search Input -->
+            <div class="relative w-full md:w-64">
+                <i data-lucide="search" class="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                <input type="text" x-model="searchQuery" 
+                       placeholder="Cari peminjam, kode, agenda..." 
+                       class="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl bg-zinc-50 border border-zinc-200/80 text-zinc-800 placeholder-zinc-400 focus:outline-none focus:bg-white focus:border-zinc-900 transition-all font-mono" />
+            </div>
+        </div>
+
+        <!-- Table View -->
+        @if (Model.TodayBookings.Any())
         {
-            <a asp-controller="Bookings" asp-action="Manage" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold border border-slate-200 shadow-sm transition-all">
-                <i data-lucide="shield-check" class="w-4 h-4 text-rose-500"></i>
-                <span>Antrean Approval (@Model.PendingBookingsCount)</span>
-            </a>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-zinc-50/75 border-b border-zinc-200/80 text-[11px] font-mono uppercase tracking-wider text-zinc-500">
+                            <th class="py-3 px-5">Referensi</th>
+                            <th class="py-3 px-5">Ruangan</th>
+                            <th class="py-3 px-5">Pemohon</th>
+                            <th class="py-3 px-5">Agenda / Keperluan</th>
+                            <th class="py-3 px-5">Jadwal Sesi</th>
+                            <th class="py-3 px-5">Status</th>
+                            <th class="py-3 px-5 text-right">Tindakan</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-zinc-100 text-xs text-zinc-700">
+                        @foreach (var b in Model.TodayBookings)
+                        {
+                            <tr class="hover:bg-zinc-50/70 transition-colors"
+                                x-show="(tableFilter === 'all' || tableFilter === '@b.Status.ToString()') && 
+                                        ('@b.BookingReference.ToLowerInvariant()'.includes(searchQuery.toLowerCase()) || 
+                                         '@b.BorrowerName.ToLowerInvariant()'.includes(searchQuery.toLowerCase()) || 
+                                         '@(b.Room?.Name.ToLowerInvariant() ?? "")'.includes(searchQuery.toLowerCase()) ||
+                                         '@b.Purpose.ToLowerInvariant()'.includes(searchQuery.toLowerCase()))">
+                                
+                                <!-- Reference Code with 1-click copy -->
+                                <td class="py-3.5 px-5 font-mono">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="font-bold text-zinc-900">@b.BookingReference</span>
+                                        <button type="button" onclick="navigator.clipboard.writeText('@b.BookingReference')" 
+                                                class="text-zinc-400 hover:text-zinc-900 p-0.5 rounded transition-colors" title="Salin ID Referensi">
+                                            <i data-lucide="copy" class="w-3 h-3"></i>
+                                        </button>
+                                    </div>
+                                    <div class="text-[10px] text-zinc-400 font-mono">@b.CreatedAt.ToString("HH:mm") WIB</div>
+                                </td>
+
+                                <!-- Room -->
+                                <td class="py-3.5 px-5">
+                                    <div class="font-semibold text-zinc-900">@(b.Room?.Name ?? "-")</div>
+                                    <div class="text-[11px] font-mono text-zinc-400 flex items-center gap-1">
+                                        <span>@(b.Room?.RoomCode ?? "-")</span>
+                                        <span>&bull;</span>
+                                        <span>@(b.Room?.Building ?? "-")</span>
+                                    </div>
+                                </td>
+
+                                <!-- Borrower -->
+                                <td class="py-3.5 px-5">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-6 h-6 rounded-full bg-zinc-100 text-zinc-700 font-mono text-[10px] font-bold flex items-center justify-center border border-zinc-200">
+                                            @(b.BorrowerName.Length >= 2 ? b.BorrowerName[..2].ToUpperInvariant() : "SR")
+                                        </div>
+                                        <div>
+                                            <div class="font-medium text-zinc-900">@b.BorrowerName</div>
+                                            <div class="text-[11px] text-zinc-400 font-mono">@b.BorrowerEmail</div>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <!-- Purpose -->
+                                <td class="py-3.5 px-5 max-w-xs truncate" title="@b.Purpose">
+                                    <span class="text-zinc-800">@b.Purpose</span>
+                                </td>
+
+                                <!-- Schedule -->
+                                <td class="py-3.5 px-5 font-mono">
+                                    <div class="font-semibold text-zinc-900">
+                                        @b.StartTime.ToString("HH:mm") — @b.EndTime.ToString("HH:mm")
+                                    </div>
+                                    <div class="text-[11px] text-zinc-400">
+                                        Durasi @((b.EndTime - b.StartTime).TotalHours.ToString("0.#")) Jam
+                                    </div>
+                                </td>
+
+                                <!-- Status Badge -->
+                                <td class="py-3.5 px-5">
+                                    @switch (b.Status)
+                                    {
+                                        case SmartRoom.Models.Enums.BookingStatus.Approved:
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-medium bg-[#EDF3EC] text-[#166534] border border-[#BBF7D0]">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-[#166534]"></span> Approved
+                                            </span>
+                                            break;
+                                        case SmartRoom.Models.Enums.BookingStatus.Pending:
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-medium bg-[#FEF9C3] text-[#854D0E] border border-[#FEF08A]">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-[#854D0E]"></span> Pending
+                                            </span>
+                                            break;
+                                        case SmartRoom.Models.Enums.BookingStatus.Rejected:
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-medium bg-[#FEE2E2] text-[#991B1B] border border-[#FECACA]">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-[#991B1B]"></span> Rejected
+                                            </span>
+                                            break;
+                                        default:
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-medium bg-zinc-100 text-zinc-600 border border-zinc-200">
+                                                Cancelled
+                                            </span>
+                                            break;
+                                    }
+                                </td>
+
+                                <!-- Actions -->
+                                <td class="py-3.5 px-5 text-right font-mono">
+                                    @if (b.Status == SmartRoom.Models.Enums.BookingStatus.Pending && User.IsInRole("Admin"))
+                                    {
+                                        <a asp-controller="Bookings" asp-action="Manage" asp-route-roomId="@b.RoomId" 
+                                           class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white text-[11px] font-medium transition-colors">
+                                            <span>Review</span>
+                                            <i data-lucide="arrow-right" class="w-3 h-3"></i>
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <a asp-controller="Bookings" asp-action="Index" 
+                                           class="inline-flex items-center gap-1 text-zinc-400 hover:text-zinc-800 text-[11px] transition-colors">
+                                            <span>Detail</span>
+                                            <i data-lucide="chevron-right" class="w-3 h-3"></i>
+                                        </a>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="py-12 text-center text-zinc-400">
+                <i data-lucide="calendar" class="w-8 h-8 mx-auto mb-2 opacity-30"></i>
+                <div class="text-xs font-medium text-zinc-600">Belum ada peminjaman aktif untuk hari ini</div>
+                <div class="text-[11px] text-zinc-400 mt-0.5">Semua ruangan bebas dipesan.</div>
+            </div>
         }
     </div>
 </div>
 
-<!-- 4 Modern Stat Cards -->
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-    <!-- Stat 1: Ruangan Aktif -->
-    <div class="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm hover:border-slate-300 transition-all">
-        <div class="flex items-center justify-between text-slate-500 mb-3">
-            <span class="text-xs font-mono uppercase tracking-wider font-semibold">Ruangan Aktif</span>
-            <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                <i data-lucide="door-open" class="w-4 h-4"></i>
-            </div>
-        </div>
-        <div class="flex items-baseline gap-2">
-            <span class="text-3xl font-extrabold text-slate-900 font-mono tracking-tight">@Model.TotalActiveRooms</span>
-            <span class="text-xs text-slate-500">unit siap pakai</span>
-        </div>
-        <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-            <span class="text-emerald-600 font-medium flex items-center gap-1">
-                <i data-lucide="check" class="w-3.5 h-3.5"></i> Siap dipesan
-            </span>
-            <a asp-controller="Rooms" asp-action="Index" class="text-slate-400 hover:text-slate-700 transition-colors">
-                Katalog &rarr;
-            </a>
-        </div>
-    </div>
-
-    <!-- Stat 2: Jadwal Hari Ini -->
-    <div class="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm hover:border-slate-300 transition-all">
-        <div class="flex items-center justify-between text-slate-500 mb-3">
-            <span class="text-xs font-mono uppercase tracking-wider font-semibold">Agenda Hari Ini</span>
-            <div class="w-8 h-8 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center">
-                <i data-lucide="calendar" class="w-4 h-4"></i>
-            </div>
-        </div>
-        <div class="flex items-baseline gap-2">
-            <span class="text-3xl font-extrabold text-slate-900 font-mono tracking-tight">@Model.TodayBookingsCount</span>
-            <span class="text-xs text-slate-500">sesi terjadwal</span>
-        </div>
-        <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-            <span>Tanggal @DateTime.Now.ToString("dd/MM/yyyy")</span>
-            <i data-lucide="activity" class="w-3.5 h-3.5 text-sky-500"></i>
-        </div>
-    </div>
-
-    <!-- Stat 3: Menunggu Approval -->
-    <div class="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm hover:border-slate-300 transition-all border-l-4 border-l-amber-500">
-        <div class="flex items-center justify-between text-slate-500 mb-3">
-            <span class="text-xs font-mono uppercase tracking-wider font-semibold text-amber-700">Menunggu Approval</span>
-            <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
-                <i data-lucide="clock" class="w-4 h-4"></i>
-            </div>
-        </div>
-        <div class="flex items-baseline gap-2">
-            <span class="text-3xl font-extrabold text-amber-600 font-mono tracking-tight">@Model.PendingBookingsCount</span>
-            <span class="text-xs text-amber-700 font-semibold px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200">Pending</span>
-        </div>
-        <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-            @if (User.IsInRole("Admin"))
-            {
-                <a asp-controller="Bookings" asp-action="Manage" class="text-amber-700 hover:text-amber-800 font-semibold flex items-center gap-1">
-                    <span>Proses Sekarang</span>
-                    <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
-                </a>
-            }
-            else
-            {
-                <span class="text-slate-400">Verifikasi admin fasilitas</span>
-            }
-        </div>
-    </div>
-
-    <!-- Stat 4: Disetujui -->
-    <div class="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm hover:border-slate-300 transition-all border-l-4 border-l-emerald-500">
-        <div class="flex items-center justify-between text-slate-500 mb-3">
-            <span class="text-xs font-mono uppercase tracking-wider font-semibold text-emerald-700">Terkonfirmasi</span>
-            <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                <i data-lucide="badge-check" class="w-4 h-4"></i>
-            </div>
-        </div>
-        <div class="flex items-baseline gap-2">
-            <span class="text-3xl font-extrabold text-emerald-600 font-mono tracking-tight">@Model.ApprovedBookingsCount</span>
-            <span class="text-xs text-emerald-700 font-semibold px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200">Disetujui</span>
-        </div>
-        <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
-            <span>Bebas bentrok jadwal</span>
-            <i data-lucide="check-check" class="w-3.5 h-3.5 text-emerald-500"></i>
-        </div>
-    </div>
-</div>
-
-<!-- Interactive Visual Timeline (Occupancy Matrix 08:00 - 18:00) -->
-<div class="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-sm mb-8">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
-        <div>
-            <h2 class="text-base font-bold text-slate-900 tracking-tight flex items-center gap-2">
-                <i data-lucide="bar-chart-horizontal" class="w-5 h-5 text-emerald-600"></i>
-                <span>Visualisasi Keterisian Ruangan Hari Ini</span>
-            </h2>
-            <p class="text-xs text-slate-500 mt-0.5">Pemetaan slot waktu (08:00 — 18:00) untuk mengecek okupansi dan slot kosong secara visual</p>
-        </div>
-        <div class="flex items-center gap-4 text-xs font-mono">
-            <span class="inline-flex items-center gap-1.5 text-slate-600">
-                <span class="w-2.5 h-2.5 rounded bg-emerald-500"></span> Disetujui (Approved)
-            </span>
-            <span class="inline-flex items-center gap-1.5 text-slate-600">
-                <span class="w-2.5 h-2.5 rounded bg-amber-500"></span> Menunggu (Pending)
-            </span>
-            <span class="inline-flex items-center gap-1.5 text-slate-400">
-                <span class="w-2.5 h-2.5 rounded bg-slate-200"></span> Kosong
-            </span>
-        </div>
-    </div>
-
-    <!-- Timeline Container -->
-    <div class="overflow-x-auto pb-2">
-        <div class="min-w-[720px]">
-            <!-- Timeline Hours Header -->
-            <div class="flex text-[11px] font-mono text-slate-400 mb-2" style="margin-left: 200px;">
-                @for (int h = 8; h <= 17; h++)
-                {
-                    <div class="flex-1 border-l border-dashed border-slate-200 pl-1 text-left">
-                        @($"{h:D2}:00")
-                    </div>
-                }
-            </div>
-
-            <!-- Grouped by Room Rows -->
-            @{
-                var roomsGrouped = Model.TodayBookings
-                    .Where(b => b.Room != null)
-                    .GroupBy(b => b.Room!)
-                    .ToList();
-            }
-
-            @if (roomsGrouped.Any())
-            {
-                @foreach (var group in roomsGrouped)
-                {
-                    var room = group.Key;
-                    <div class="flex items-center py-2.5 border-t border-slate-100 hover:bg-slate-50/60 transition-colors">
-                        <!-- Room Label -->
-                        <div class="w-[200px] flex-shrink-0 pr-4">
-                            <div class="font-semibold text-xs text-slate-900 truncate" title="@room.Name">@room.Name</div>
-                            <div class="text-[10px] font-mono text-slate-400">@room.RoomCode &bull; @room.Capacity Kursi</div>
-                        </div>
-
-                        <!-- Bar Runway -->
-                        <div class="relative flex-1 h-8 bg-slate-100/90 rounded-lg border border-slate-200 overflow-hidden">
-                            <!-- Background Grid Lines -->
-                            <div class="absolute inset-0 flex pointer-events-none">
-                                @for (int i = 0; i < 10; i++)
-                                {
-                                    <div class="flex-1 border-r border-dashed border-slate-200/80"></div>
-                                }
-                            </div>
-
-                            <!-- Occupied Slots -->
-                            @foreach (var b in group)
-                            {
-                                var dayStart = DateTime.Today.AddHours(8);
-                                var totalMinutes = 10 * 60; // 10 hours * 60 min = 600 min
-                                var startMin = Math.Max(0, (b.StartTime - dayStart).TotalMinutes);
-                                var durationMin = (b.EndTime - b.StartTime).TotalMinutes;
-                                var leftPct = (startMin / totalMinutes) * 100;
-                                var widthPct = Math.Min(100 - leftPct, (durationMin / totalMinutes) * 100);
-
-                                if (b.Status != SmartRoom.Models.Enums.BookingStatus.Rejected && b.Status != SmartRoom.Models.Enums.BookingStatus.Cancelled)
-                                {
-                                    var barColor = b.Status == SmartRoom.Models.Enums.BookingStatus.Approved 
-                                        ? "bg-emerald-500 text-white shadow-sm" 
-                                        : "bg-amber-500 text-white shadow-sm";
-
-                                    <div class="absolute inset-y-1 rounded-md px-2 flex items-center text-[10px] font-mono font-semibold truncate @barColor transition-all"
-                                         style="left: @leftPct.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)%; width: @widthPct.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)%;"
-                                         title="@b.BookingReference: @b.BorrowerName (@b.StartTime.ToString("HH:mm") - @b.EndTime.ToString("HH:mm")) — @b.Purpose">
-                                        <span>@b.StartTime.ToString("HH:mm")-@b.EndTime.ToString("HH:mm")</span>
-                                        <span class="opacity-80 ml-1.5 font-normal truncate hidden md:inline">@b.BorrowerName</span>
-                                    </div>
-                                }
-                            }
-                        </div>
-                    </div>
-                }
-            }
-            else
-            {
-                <div class="py-8 text-center text-xs text-slate-400 font-mono border-t border-slate-100">
-                    Belum ada jadwal terisi untuk hari ini. Semua ruangan masih sepenuhnya kosong.
-                </div>
-            }
-        </div>
-    </div>
-</div>
-
-<!-- Today's Schedule Table -->
-<div class="rounded-2xl bg-white border border-slate-200/80 shadow-sm overflow-hidden">
-    <div class="p-5 border-b border-slate-200/80 flex items-center justify-between">
-        <div>
-            <h3 class="text-sm font-bold text-slate-900 tracking-tight">Daftar Peminjaman Hari Ini</h3>
-            <p class="text-xs text-slate-500 mt-0.5">Rincian peminjam, jam pelaksanaan, dan status persetujuan</p>
-        </div>
-        <a asp-controller="Bookings" asp-action="Index" class="text-xs font-semibold text-slate-600 hover:text-slate-900 inline-flex items-center gap-1 transition-colors">
-            <span>Lihat Semua</span>
-            <i data-lucide="chevron-right" class="w-4 h-4"></i>
-        </a>
-    </div>
-
-    @if (Model.TodayBookings.Any())
-    {
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-50/80 border-b border-slate-200/80 text-[11px] font-mono uppercase tracking-wider text-slate-500">
-                        <th class="py-3 px-5">Referensi</th>
-                        <th class="py-3 px-5">Ruangan</th>
-                        <th class="py-3 px-5">Peminjam</th>
-                        <th class="py-3 px-5">Agenda</th>
-                        <th class="py-3 px-5">Waktu</th>
-                        <th class="py-3 px-5">Status</th>
-                        <th class="py-3 px-5 text-right">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 text-xs text-slate-700">
-                    @foreach (var b in Model.TodayBookings)
-                    {
-                        <tr class="hover:bg-slate-50/80 transition-colors">
-                            <td class="py-3.5 px-5 font-mono font-semibold text-slate-900">
-                                @b.BookingReference
-                            </td>
-                            <td class="py-3.5 px-5">
-                                <div class="font-semibold text-slate-900">@(b.Room?.Name ?? "-")</div>
-                                <div class="text-[11px] font-mono text-slate-400">@(b.Room?.Building ?? "-") (@(b.Room?.RoomCode ?? "-"))</div>
-                            </td>
-                            <td class="py-3.5 px-5">
-                                <div class="font-medium text-slate-900">@b.BorrowerName</div>
-                                <div class="text-[11px] text-slate-400">@b.BorrowerEmail</div>
-                            </td>
-                            <td class="py-3.5 px-5 max-w-xs truncate" title="@b.Purpose">
-                                @b.Purpose
-                            </td>
-                            <td class="py-3.5 px-5 font-mono">
-                                <div class="font-semibold text-slate-800">
-                                    @b.StartTime.ToString("HH:mm") — @b.EndTime.ToString("HH:mm")
-                                </div>
-                                <div class="text-[11px] text-slate-400">Durasi @((b.EndTime - b.StartTime).TotalHours.ToString("0.#")) Jam</div>
-                            </td>
-                            <td class="py-3.5 px-5">
-                                @switch (b.Status)
-                                {
-                                    case SmartRoom.Models.Enums.BookingStatus.Pending:
-                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Pending
-                                        </span>
-                                        break;
-                                    case SmartRoom.Models.Enums.BookingStatus.Approved:
-                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Approved
-                                        </span>
-                                        break;
-                                    case SmartRoom.Models.Enums.BookingStatus.Rejected:
-                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Rejected
-                                        </span>
-                                        break;
-                                    case SmartRoom.Models.Enums.BookingStatus.Cancelled:
-                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">
-                                            Cancelled
-                                        </span>
-                                        break;
-                                }
-                            </td>
-                            <td class="py-3.5 px-5 text-right font-mono">
-                                @if (b.Status == SmartRoom.Models.Enums.BookingStatus.Pending && User.IsInRole("Admin"))
-                                {
-                                    <a asp-controller="Bookings" asp-action="Manage" asp-route-roomId="@b.RoomId" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-medium transition-colors">
-                                        <span>Proses</span>
-                                        <i data-lucide="arrow-right" class="w-3 h-3"></i>
-                                    </a>
-                                }
-                                else
-                                {
-                                    <span class="text-slate-300">—</span>
-                                }
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    }
-    else
-    {
-        <div class="py-12 text-center text-slate-400">
-            <i data-lucide="calendar-x" class="w-8 h-8 mx-auto mb-2 opacity-30"></i>
-            <div class="text-xs font-medium text-slate-600">Belum ada peminjaman aktif untuk hari ini</div>
-            <div class="text-[11px] text-slate-400 mt-0.5">Semua ruangan bebas dipesan.</div>
-        </div>
-    }
-</div>
-
 @section Scripts {
-    <script>lucide.createIcons();</script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (window.lucide) {
+                window.lucide.createIcons();
+            }
+        });
+    </script>
 }
