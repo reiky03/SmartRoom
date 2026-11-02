@@ -7,36 +7,52 @@ export interface ToastMessage {
   message: string;
 }
 
-const PRESET_USERS: Record<'Admin' | 'Staff' | 'Student', UserProfile> = {
+export const PRESET_USERS: Record<'Admin' | 'Staff' | 'Student', UserProfile & { passwordDefault: string }> = {
+  Student: {
+    username: 'student',
+    passwordDefault: 'student123',
+    fullName: 'Rizky Pratama',
+    email: 'student@smartroom.ac.id',
+    role: 'Student',
+    department: 'Teknik Informatika (Mahasiswa)',
+    avatarInitials: 'RP',
+  },
   Admin: {
     username: 'admin',
-    fullName: 'Dr. Hendra Wijaya, M.Kom',
-    email: 'admin@kampus.ac.id',
+    passwordDefault: 'admin123',
+    fullName: 'Dr. Hendra Wijaya, M.Sc.',
+    email: 'admin@smartroom.ac.id',
     role: 'Admin',
-    department: 'Biro Administrasi Sarana & Kampus',
+    department: 'Biro Sarana & Fasilitas Kampus',
     avatarInitials: 'HW',
   },
   Staff: {
     username: 'staff',
-    fullName: 'Siti Rahmawati, S.T.',
-    email: 'staff@kampus.ac.id',
+    passwordDefault: 'staff123',
+    fullName: 'Siti Nurhaliza, M.Kom.',
+    email: 'staff@smartroom.ac.id',
     role: 'Staff',
-    department: 'Laboratorium Terpadu FTI',
-    avatarInitials: 'SR',
-  },
-  Student: {
-    username: 'student',
-    fullName: 'Reiky Pratama',
-    email: 'student@students.ac.id',
-    role: 'Student',
-    department: 'Teknik Informatika (Civitas)',
-    avatarInitials: 'RP',
+    department: 'Laboratorium Rekayasa Perangkat Lunak',
+    avatarInitials: 'SN',
   },
 };
 
-// Initial state from localStorage or default to Admin
-const savedRole = (localStorage.getItem('smartroom_role') as 'Admin' | 'Staff' | 'Student') || 'Admin';
-export const currentUser = ref<UserProfile>(PRESET_USERS[savedRole] || PRESET_USERS.Admin);
+// Check if user session exists in localStorage
+const savedUserJson = localStorage.getItem('smartroom_user_session');
+let initialUser: UserProfile | null = null;
+if (savedUserJson) {
+  try {
+    initialUser = JSON.parse(savedUserJson);
+  } catch {
+    initialUser = null;
+  }
+}
+
+export const currentUser = ref<UserProfile | null>(initialUser);
+export const isAuthenticated = computed(() => currentUser.value !== null);
+export const isAdmin = computed(() => currentUser.value?.role === 'Admin');
+export const isStudent = computed(() => currentUser.value?.role === 'Student');
+export const isStaff = computed(() => currentUser.value?.role === 'Staff');
 
 export const toasts = ref<ToastMessage[]>([]);
 
@@ -52,12 +68,62 @@ export function removeToast(id: string) {
   toasts.value = toasts.value.filter((t) => t.id !== id);
 }
 
-export function switchRole(role: 'Admin' | 'Staff' | 'Student') {
-  currentUser.value = PRESET_USERS[role];
-  localStorage.setItem('smartroom_role', role);
-  addToast(`Beralih peran ke ${currentUser.value.fullName} (${role})`, 'info');
+export function login(usernameInput: string, passwordInput: string): { success: boolean; message: string; role?: 'Admin' | 'Staff' | 'Student' } {
+  const normalizedUser = usernameInput.trim().toLowerCase();
+  
+  let matchedKey: 'Admin' | 'Staff' | 'Student' | null = null;
+  if (normalizedUser === 'student' || normalizedUser === 'student@smartroom.ac.id') {
+    matchedKey = 'Student';
+  } else if (normalizedUser === 'admin' || normalizedUser === 'admin@smartroom.ac.id') {
+    matchedKey = 'Admin';
+  } else if (normalizedUser === 'staff' || normalizedUser === 'staff@smartroom.ac.id') {
+    matchedKey = 'Staff';
+  }
+
+  if (!matchedKey) {
+    return { success: false, message: 'Username atau email tidak terdaftar dalam sistem.' };
+  }
+
+  const preset = PRESET_USERS[matchedKey];
+  if (passwordInput !== preset.passwordDefault) {
+    return { success: false, message: 'Kata sandi tidak sesuai. Silakan coba lagi.' };
+  }
+
+  const userProfile: UserProfile = {
+    username: preset.username,
+    fullName: preset.fullName,
+    email: preset.email,
+    role: preset.role,
+    department: preset.department,
+    avatarInitials: preset.avatarInitials,
+  };
+
+  currentUser.value = userProfile;
+  localStorage.setItem('smartroom_user_session', JSON.stringify(userProfile));
+  addToast(`Selamat datang kembali, ${userProfile.fullName}! (${userProfile.role})`, 'success');
+
+  return { success: true, message: 'Otentikasi berhasil', role: preset.role };
 }
 
-export const isAdmin = computed(() => currentUser.value.role === 'Admin');
-export const isStaff = computed(() => currentUser.value.role === 'Staff');
-export const isStudent = computed(() => currentUser.value.role === 'Student');
+export function quickLoginAs(role: 'Admin' | 'Staff' | 'Student'): UserProfile {
+  const preset = PRESET_USERS[role];
+  const userProfile: UserProfile = {
+    username: preset.username,
+    fullName: preset.fullName,
+    email: preset.email,
+    role: preset.role,
+    department: preset.department,
+    avatarInitials: preset.avatarInitials,
+  };
+
+  currentUser.value = userProfile;
+  localStorage.setItem('smartroom_user_session', JSON.stringify(userProfile));
+  addToast(`Masuk sebagai ${userProfile.fullName} (${userProfile.role})`, 'success');
+  return userProfile;
+}
+
+export function logout() {
+  currentUser.value = null;
+  localStorage.removeItem('smartroom_user_session');
+  addToast('Sesi Anda telah berhasil diakhiri.', 'info');
+}

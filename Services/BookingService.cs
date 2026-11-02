@@ -25,7 +25,7 @@ public class BookingService : IBookingService
         _context = context;
     }
 
-    public async Task<IEnumerable<Booking>> GetAllBookingsAsync(int? roomId = null, BookingStatus? status = null, DateOnly? date = null)
+    public async Task<IEnumerable<Booking>> GetAllBookingsAsync(int? roomId = null, BookingStatus? status = null, DateOnly? date = null, string? borrowerEmail = null)
     {
         var query = _context.Bookings
             .Include(b => b.Room)
@@ -46,6 +46,12 @@ public class BookingService : IBookingService
             var startOfDay = date.Value.ToDateTime(TimeOnly.MinValue);
             var endOfDay = date.Value.ToDateTime(TimeOnly.MaxValue);
             query = query.Where(b => b.StartTime >= startOfDay && b.StartTime <= endOfDay);
+        }
+
+        if (!string.IsNullOrWhiteSpace(borrowerEmail))
+        {
+            var normalizedEmail = borrowerEmail.Trim().ToLowerInvariant();
+            query = query.Where(b => b.BorrowerEmail.ToLower() == normalizedEmail);
         }
 
         return await query.OrderByDescending(b => b.StartTime).ToListAsync();

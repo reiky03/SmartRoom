@@ -44,12 +44,17 @@ watch(() => props.isOpen, async (open) => {
     }
 
     // Default borrower info
-    borrowerName.value = currentUser.value.fullName;
-    borrowerEmail.value = currentUser.value.email;
+    borrowerName.value = currentUser.value?.fullName || '';
+    borrowerEmail.value = currentUser.value?.email || '';
 
-    // Default dates
-    const today = props.initialDate || new Date().toISOString().split('T')[0];
-    startDate.value = today;
+    // Default dates: default to tomorrow for fresh requests to ensure future schedule
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    const defaultDate = props.initialDate || (props.initialHour !== undefined ? todayStr : tomorrowStr);
+    startDate.value = defaultDate;
 
     if (props.initialRoomId) {
       roomId.value = props.initialRoomId;
@@ -340,6 +345,7 @@ async function handleSubmit() {
             </button>
             <button 
               type="button" 
+              id="submit-booking-drawer-btn"
               @click="handleSubmit"
               :disabled="isSubmitting || isConflict || durationHours < 0.5 || durationHours > 8"
               class="px-5 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 disabled:bg-zinc-300 text-white text-xs font-medium shadow-xs transition-all active:scale-[0.98] flex items-center gap-1.5"

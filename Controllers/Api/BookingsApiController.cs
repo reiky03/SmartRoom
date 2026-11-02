@@ -24,12 +24,14 @@ public class BookingsApiController : ControllerBase
     /// <param name="roomId">Filter berdasarkan ID ruangan</param>
     /// <param name="status">Filter berdasarkan status (0: Pending, 1: Approved, 2: Rejected, 3: Cancelled)</param>
     /// <param name="date">Filter berdasarkan tanggal (Format: YYYY-MM-DD)</param>
+    /// <param name="borrowerEmail">Filter berdasarkan email peminjam</param>
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<Booking>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAllBookings(
         [FromQuery] int? roomId,
         [FromQuery] BookingStatus? status,
-        [FromQuery] string? date)
+        [FromQuery] string? date,
+        [FromQuery] string? borrowerEmail)
     {
         DateOnly? targetDate = null;
         if (!string.IsNullOrWhiteSpace(date) && DateOnly.TryParse(date, out var parsedDate))
@@ -37,7 +39,7 @@ public class BookingsApiController : ControllerBase
             targetDate = parsedDate;
         }
 
-        var bookings = await _bookingService.GetAllBookingsAsync(roomId, status, targetDate);
+        var bookings = await _bookingService.GetAllBookingsAsync(roomId, status, targetDate, borrowerEmail);
         return Ok(bookings);
     }
 

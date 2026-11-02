@@ -45,11 +45,12 @@ export const api = {
     fetchApi<{ message: string }>(`/rooms/${id}/toggle`, { method: 'PATCH' }),
 
   // Bookings
-  getBookings: (params?: { roomId?: number; status?: BookingStatus; date?: string }) => {
+  getBookings: (params?: { roomId?: number; status?: BookingStatus; date?: string; borrowerEmail?: string }) => {
     const searchParams = new URLSearchParams();
     if (params?.roomId) searchParams.append('roomId', params.roomId.toString());
     if (params?.status !== undefined) searchParams.append('status', params.status.toString());
     if (params?.date) searchParams.append('date', params.date);
+    if (params?.borrowerEmail) searchParams.append('borrowerEmail', params.borrowerEmail);
     const queryString = searchParams.toString() ? `?${searchParams.toString()}` : '';
     return fetchApi<Booking[]>(`/bookings${queryString}`);
   },

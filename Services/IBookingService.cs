@@ -6,7 +6,7 @@ namespace SmartRoom.Services;
 
 public interface IBookingService
 {
-    Task<IEnumerable<Booking>> GetAllBookingsAsync(int? roomId = null, BookingStatus? status = null, DateOnly? date = null);
+    Task<IEnumerable<Booking>> GetAllBookingsAsync(int? roomId = null, BookingStatus? status = null, DateOnly? date = null, string? borrowerEmail = null);
     Task<Booking?> GetBookingByIdAsync(int id);
     Task<Booking?> GetBookingByReferenceAsync(string reference);
     Task<Booking> CreateBookingAsync(CreateBookingDto dto);

@@ -15,7 +15,7 @@ function handleOpenBooking(roomId?: number, hour?: number) {
 }
 
 function handleBookingCreated() {
-  // If needed, refresh or trigger global bus
+  window.dispatchEvent(new CustomEvent('booking-created'));
 }
 </script>
 
