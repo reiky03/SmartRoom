@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using SmartRoom.DTOs;
@@ -48,13 +50,17 @@ public class BookingsController : Controller
         if (DateTime.Now.TimeOfDay > TimeSpan.FromHours(8))
         {
             defaultStart = DateTime.Now.AddHours(1);
-            // round to nearest 30 mins
             defaultStart = new DateTime(defaultStart.Year, defaultStart.Month, defaultStart.Day, defaultStart.Hour, defaultStart.Minute >= 30 ? 30 : 0, 0);
         }
+
+        var borrowerName = User.Identity?.IsAuthenticated == true ? User.Identity.Name ?? string.Empty : string.Empty;
+        var borrowerEmail = User.Identity?.IsAuthenticated == true ? User.FindFirstValue(ClaimTypes.Email) ?? string.Empty : string.Empty;
 
         var dto = new CreateBookingDto
         {
             RoomId = roomId ?? 0,
+            BorrowerName = borrowerName,
+            BorrowerEmail = borrowerEmail,
             StartTime = defaultStart,
             EndTime = defaultStart.AddHours(2)
         };
@@ -96,6 +102,7 @@ public class BookingsController : Controller
     }
 
     // GET: /Bookings/Manage (Approval Admin Panel)
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Manage(int? roomId, BookingStatus? status)
     {
         var bookings = await _bookingService.GetAllBookingsAsync(roomId, status);
@@ -110,6 +117,7 @@ public class BookingsController : Controller
 
     // POST: /Bookings/UpdateStatus
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> UpdateStatus(int id, BookingStatus status, string? adminNotes, string? returnUrl)
     {

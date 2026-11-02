@@ -11,9 +11,49 @@ public static class DbSeeder
         // Ensure database is created
         await context.Database.EnsureCreatedAsync();
 
+        // Seed Users if empty
+        if (!await context.Users.AnyAsync())
+        {
+            var defaultUsers = new List<User>
+            {
+                new()
+                {
+                    Username = "admin",
+                    FullName = "Dr. Hendra Wijaya, M.Sc.",
+                    Email = "admin@smartroom.ac.id",
+                    Role = UserRole.Admin,
+                    Department = "Biro Sarana & Fasilitas Kampus",
+                    AvatarInitials = "HW",
+                    CreatedAt = DateTime.UtcNow.AddMonths(-1)
+                },
+                new()
+                {
+                    Username = "staff",
+                    FullName = "Siti Nurhaliza, M.Kom.",
+                    Email = "staff@smartroom.ac.id",
+                    Role = UserRole.Staff,
+                    Department = "Dosen & Koordinator Lab TI",
+                    AvatarInitials = "SN",
+                    CreatedAt = DateTime.UtcNow.AddMonths(-1)
+                },
+                new()
+                {
+                    Username = "student",
+                    FullName = "Rizky Pratama",
+                    Email = "student@smartroom.ac.id",
+                    Role = UserRole.Student,
+                    Department = "Mahasiswa / Ketua BEM TI",
+                    AvatarInitials = "RP",
+                    CreatedAt = DateTime.UtcNow.AddMonths(-1)
+                }
+            };
+            await context.Users.AddRangeAsync(defaultUsers);
+            await context.SaveChangesAsync();
+        }
+
         if (await context.Rooms.AnyAsync())
         {
-            return; // Data already seeded
+            return; // Rooms already seeded
         }
 
         var today = DateTime.Today;

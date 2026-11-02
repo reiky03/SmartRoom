@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartRoom.Models;
 using SmartRoom.Services;
@@ -22,6 +23,7 @@ public class RoomsController : Controller
     }
 
     // GET: /Rooms/Create
+    [Authorize(Roles = "Admin")]
     public IActionResult Create()
     {
         return View(new Room { IsActive = true, Capacity = 20 });
@@ -29,6 +31,7 @@ public class RoomsController : Controller
 
     // POST: /Rooms/Create
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(Room room)
     {
@@ -51,6 +54,7 @@ public class RoomsController : Controller
     }
 
     // GET: /Rooms/Edit/5
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Edit(int id)
     {
         var room = await _roomService.GetRoomByIdAsync(id);
@@ -65,6 +69,7 @@ public class RoomsController : Controller
 
     // POST: /Rooms/Edit/5
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, Room room)
     {
@@ -99,6 +104,7 @@ public class RoomsController : Controller
 
     // POST: /Rooms/ToggleStatus/5
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ToggleStatus(int id)
     {
@@ -117,6 +123,7 @@ public class RoomsController : Controller
 
     // POST: /Rooms/Delete/5
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id)
     {

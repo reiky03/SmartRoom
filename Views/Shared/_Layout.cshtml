@@ -1,13 +1,14 @@
+@using System.Security.Claims
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="h-full">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - SmartRoom Booking</title>
-    <!-- Google Fonts: Inter -->
+    <title>@ViewData["Title"] — SmartRoom</title>
+    <!-- Fonts: Plus Jakarta Sans & JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
@@ -15,141 +16,340 @@
     
     <style>
         :root {
-            --bs-body-font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-            --bs-primary: #2563eb;
-            --bs-primary-rgb: 37, 99, 235;
+            --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            --bg-canvas: #fafafa;
+            --bg-surface: #ffffff;
+            --border-subtle: #e5e7eb;
+            --border-hover: #d1d5db;
+            --text-main: #111827;
+            --text-secondary: #4b5563;
+            --text-muted: #6b7280;
+            --primary: #0f172a;
+            --primary-hover: #1e293b;
         }
+
         body {
-            background-color: #f8fafc;
-            color: #1e293b;
+            font-family: var(--font-sans);
+            background-color: var(--bg-canvas);
+            color: var(--text-main);
+            letter-spacing: -0.015em;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
         }
-        .navbar-brand-badge {
-            font-size: 0.68rem;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
+
+        .font-mono {
+            font-family: var(--font-mono);
+            letter-spacing: -0.02em;
         }
-        .card {
-            border: 1px solid #e2e8f0;
-            border-radius: 1rem;
-            transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+        /* Minimal Header */
+        .app-navbar {
+            background-color: #ffffff;
+            border-bottom: 1px solid var(--border-subtle);
+            padding: 0.75rem 1.5rem;
+            position: sticky;
+            top: 0;
+            z-index: 1030;
         }
-        .table-custom th {
-            font-size: 0.78rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: #64748b;
-            background-color: #f1f5f9;
+
+        .nav-link-minimal {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            padding: 0.45rem 0.85rem;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            transition: all 0.15s ease-in-out;
         }
-        .badge-status-pending {
-            background-color: #fef3c7;
-            color: #b45309;
+        .nav-link-minimal:hover {
+            color: var(--text-main);
+            background-color: #f3f4f6;
+        }
+        .nav-link-minimal.active {
+            color: var(--text-main);
+            background-color: #f3f4f6;
+            font-weight: 600;
+        }
+
+        /* Buttons & Actions */
+        .btn-minimal-primary {
+            background-color: var(--primary);
+            color: #ffffff;
+            border: 1px solid var(--primary);
+            font-size: 0.84rem;
+            font-weight: 500;
+            padding: 0.45rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.15s ease;
+        }
+        .btn-minimal-primary:hover {
+            background-color: var(--primary-hover);
+            color: #ffffff;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+        }
+
+        .btn-minimal-secondary {
+            background-color: #ffffff;
+            color: var(--text-main);
+            border: 1px solid var(--border-subtle);
+            font-size: 0.84rem;
+            font-weight: 500;
+            padding: 0.45rem 0.9rem;
+            border-radius: 0.5rem;
+            transition: all 0.15s ease;
+        }
+        .btn-minimal-secondary:hover {
+            background-color: #f9fafb;
+            border-color: var(--border-hover);
+            color: var(--text-main);
+        }
+
+        /* Cards & Bento Grid */
+        .card-minimal {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 0.75rem;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        .card-minimal:hover {
+            border-color: #d1d5db;
+        }
+
+        /* Semantic Soft Badges */
+        .badge-pill-soft {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.65rem;
+            border-radius: 9999px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+        .badge-soft-pending {
+            background-color: #fffbeb;
+            color: #92400e;
             border: 1px solid #fde68a;
         }
-        .badge-status-approved {
-            background-color: #dcfce7;
-            color: #15803d;
+        .badge-soft-approved {
+            background-color: #ecfdf5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        .badge-soft-rejected {
+            background-color: #fff1f2;
+            color: #9f1239;
+            border: 1px solid #fecdd3;
+        }
+        .badge-soft-cancelled {
+            background-color: #f3f4f6;
+            color: #4b5563;
+            border: 1px solid #e5e7eb;
+        }
+
+        /* Role Badges */
+        .badge-role-admin {
+            background-color: #f5f3ff;
+            color: #5b21b6;
+            border: 1px solid #ddd6fe;
+        }
+        .badge-role-staff {
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+        .badge-role-student {
+            background-color: #f0fdf4;
+            color: #166534;
             border: 1px solid #bbf7d0;
         }
-        .badge-status-rejected {
-            background-color: #fee2e2;
-            color: #b91c1c;
-            border: 1px solid #fecaca;
+
+        /* Sleek Tables */
+        .table-minimal {
+            border-collapse: separate;
+            border-spacing: 0;
+            width: 100%;
         }
-        .badge-status-cancelled {
-            background-color: #f1f5f9;
-            color: #475569;
-            border: 1px solid #e2e8f0;
+        .table-minimal th {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            background-color: #f9fafb;
+            border-bottom: 1px solid var(--border-subtle);
+            padding: 0.75rem 1rem;
         }
-        footer {
-            margin-top: auto;
-            border-top: 1px solid #e2e8f0;
-            background: #ffffff;
+        .table-minimal td {
+            font-size: 0.85rem;
+            padding: 0.85rem 1rem;
+            border-bottom: 1px solid var(--border-subtle);
+            vertical-align: middle;
+            color: var(--text-main);
+        }
+        .table-minimal tr:last-child td {
+            border-bottom: none;
+        }
+        .table-minimal tbody tr:hover td {
+            background-color: #f9fafb;
+        }
+
+        .avatar-circle {
+            width: 32px;
+            height: 32px;
+            border-radius: 9999px;
+            background-color: #111827;
+            color: #ffffff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0;
         }
     </style>
 </head>
 <body>
-    <!-- Navigation Bar -->
-    <header>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark py-2 px-3 shadow-sm sticky-top">
-            <div class="container-fluid max-w-7xl">
-                <a class="navbar-brand d-flex align-items-center gap-2 fw-bold text-white fs-5" asp-controller="Home" asp-action="Index">
-                    <span class="bg-primary text-white p-2 rounded-3 d-inline-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
-                        <i class="bi bi-building-check"></i>
+    <!-- Top Navigation -->
+    <header class="app-navbar">
+        <div class="container-fluid max-w-7xl d-flex align-items-center justify-content-between">
+            <!-- Brand & Main Nav Links -->
+            <div class="d-flex align-items-center gap-4">
+                <a class="d-flex align-items-center gap-2 text-decoration-none text-dark" asp-controller="Home" asp-action="Index">
+                    <span class="d-inline-flex align-items-center justify-content-center bg-dark text-white rounded-2" style="width: 28px; height: 28px;">
+                        <i class="bi bi-intersect fs-6"></i>
                     </span>
-                    <span>SmartRoom</span>
-                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle navbar-brand-badge">.NET 8</span>
+                    <span class="fw-bold tracking-tight fs-6">SmartRoom</span>
                 </a>
 
-                <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
+                <nav class="d-none d-md-flex align-items-center gap-1">
+                    <a class="nav-link-minimal @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Home" ? "active" : "")" 
+                       asp-controller="Home" asp-action="Index">
+                        Dashboard
+                    </a>
+                    <a class="nav-link-minimal @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Rooms" ? "active" : "")" 
+                       asp-controller="Rooms" asp-action="Index">
+                        Ruangan
+                    </a>
+                    <a class="nav-link-minimal @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Bookings" && ViewContext.RouteData.Values["Action"]?.ToString() != "Manage" ? "active" : "")" 
+                       asp-controller="Bookings" asp-action="Index">
+                        Jadwal Peminjaman
+                    </a>
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a class="nav-link-minimal @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Bookings" && ViewContext.RouteData.Values["Action"]?.ToString() == "Manage" ? "active" : "")" 
+                           asp-controller="Bookings" asp-action="Manage">
+                            Approval Admin
+                            <span class="badge bg-dark text-white rounded-pill px-1.5 ms-1 font-mono" style="font-size: 0.65rem;">ADMIN</span>
+                        </a>
+                    }
+                </nav>
+            </div>
 
-                <div class="collapse navbar-collapse" id="navbarContent">
-                    <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3 gap-lg-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-white-50 px-3 rounded-pill @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Home" ? "active text-white bg-secondary bg-opacity-25 fw-semibold" : "")" 
-                               asp-controller="Home" asp-action="Index">
-                                <i class="bi bi-speedometer2 me-1"></i> Dashboard
+            <!-- Actions, Swagger & RBAC Persona Switcher -->
+            <div class="d-flex align-items-center gap-2">
+                <a href="/swagger" target="_blank" class="btn btn-minimal-secondary d-none d-sm-inline-flex align-items-center gap-1.5" title="Buka Dokumentasi Swagger REST API">
+                    <i class="bi bi-braces fs-6"></i>
+                    <span class="font-mono" style="font-size: 0.8rem;">/api</span>
+                </a>
+
+                <a asp-controller="Bookings" asp-action="Create" class="btn btn-minimal-primary d-inline-flex align-items-center gap-1.5">
+                    <i class="bi bi-plus-lg"></i>
+                    <span>Pinjam Ruangan</span>
+                </a>
+
+                <!-- RBAC Interactive Persona Dropdown -->
+                <div class="dropdown">
+                    <button class="btn btn-minimal-secondary d-flex align-items-center gap-2 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            var role = User.FindFirstValue(ClaimTypes.Role) ?? "Student";
+                            var initials = User.FindFirst("AvatarInitials")?.Value ?? "SR";
+                            <span class="avatar-circle">@initials</span>
+                            <div class="text-start d-none d-lg-block" style="line-height: 1.2;">
+                                <div class="fw-semibold text-truncate" style="max-width: 140px; font-size: 0.82rem;">@User.Identity.Name</div>
+                                <span class="badge-pill-soft @(role == "Admin" ? "badge-role-admin" : (role == "Staff" ? "badge-role-staff" : "badge-role-student"))" style="font-size: 0.65rem; padding: 0.1rem 0.4rem;">
+                                    @role
+                                </span>
+                            </div>
+                        }
+                        else
+                        {
+                            <i class="bi bi-person-circle fs-5"></i>
+                            <span class="small fw-semibold d-none d-sm-inline">Pilih Peran</span>
+                        }
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border p-2 rounded-3" style="min-width: 270px;">
+                        <li class="px-2 py-1 mb-1 border-bottom">
+                            <span class="text-uppercase text-muted fw-bold font-mono" style="font-size: 0.68rem;">RBAC Persona Switcher (1-Klik)</span>
+                            <p class="text-muted small mb-1" style="font-size: 0.75rem;">Uji hak akses peran secara instan:</p>
+                        </li>
+                        <li>
+                            <a class="dropdown-item rounded-2 py-2 d-flex align-items-center justify-content-between @(User.IsInRole("Admin") ? "bg-light fw-bold" : "")" 
+                               asp-controller="Account" asp-action="SwitchRole" asp-route-role="Admin" asp-route-returnUrl="@Context.Request.Path">
+                                <div>
+                                    <div class="fw-semibold" style="font-size: 0.82rem;">Administrator</div>
+                                    <small class="text-muted d-block" style="font-size: 0.72rem;">Full akses: Approve, Reject, CRUD Ruang</small>
+                                </div>
+                                @if (User.IsInRole("Admin")) { <i class="bi bi-check-lg text-primary"></i> }
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-white-50 px-3 rounded-pill @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Rooms" ? "active text-white bg-secondary bg-opacity-25 fw-semibold" : "")" 
-                               asp-controller="Rooms" asp-action="Index">
-                                <i class="bi bi-door-open me-1"></i> Manajemen Ruangan
+                        <li>
+                            <a class="dropdown-item rounded-2 py-2 d-flex align-items-center justify-content-between @(User.IsInRole("Staff") ? "bg-light fw-bold" : "")" 
+                               asp-controller="Account" asp-action="SwitchRole" asp-route-role="Staff" asp-route-returnUrl="@Context.Request.Path">
+                                <div>
+                                    <div class="fw-semibold" style="font-size: 0.82rem;">Staff / Dosen</div>
+                                    <small class="text-muted d-block" style="font-size: 0.72rem;">Booking instan & monitoring ruangan</small>
+                                </div>
+                                @if (User.IsInRole("Staff")) { <i class="bi bi-check-lg text-primary"></i> }
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-white-50 px-3 rounded-pill @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Bookings" && ViewContext.RouteData.Values["Action"]?.ToString() != "Manage" ? "active text-white bg-secondary bg-opacity-25 fw-semibold" : "")" 
-                               asp-controller="Bookings" asp-action="Index">
-                                <i class="bi bi-calendar-check me-1"></i> Peminjaman
+                        <li>
+                            <a class="dropdown-item rounded-2 py-2 d-flex align-items-center justify-content-between @(User.IsInRole("Student") ? "bg-light fw-bold" : "")" 
+                               asp-controller="Account" asp-action="SwitchRole" asp-route-role="Student" asp-route-returnUrl="@Context.Request.Path">
+                                <div>
+                                    <div class="fw-semibold" style="font-size: 0.82rem;">Mahasiswa / Umum</div>
+                                    <small class="text-muted d-block" style="font-size: 0.72rem;">Pengajuan peminjaman & cek jadwal</small>
+                                </div>
+                                @if (User.IsInRole("Student")) { <i class="bi bi-check-lg text-primary"></i> }
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-white-50 px-3 rounded-pill @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Bookings" && ViewContext.RouteData.Values["Action"]?.ToString() == "Manage" ? "active text-white bg-secondary bg-opacity-25 fw-semibold" : "")" 
-                               asp-controller="Bookings" asp-action="Manage">
-                                <i class="bi bi-shield-check me-1"></i> Panel Approval
-                            </a>
-                        </li>
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="border-top mt-2 pt-2">
+                                <a class="dropdown-item rounded-2 text-danger small py-1.5" asp-controller="Account" asp-action="Logout">
+                                    <i class="bi bi-box-arrow-right me-1"></i> Keluar (Logout)
+                                </a>
+                            </li>
+                        }
                     </ul>
-
-                    <div class="d-flex align-items-center gap-2 mt-3 mt-lg-0">
-                        <a href="/swagger" target="_blank" class="btn btn-sm btn-outline-info rounded-pill px-3 d-inline-flex align-items-center gap-1 shadow-sm">
-                            <i class="bi bi-code-slash"></i>
-                            <span class="fw-semibold">Swagger API Docs</span>
-                            <i class="bi bi-box-arrow-up-right fs-xs"></i>
-                        </a>
-                        <a asp-controller="Bookings" asp-action="Create" class="btn btn-sm btn-primary rounded-pill px-3 d-inline-flex align-items-center gap-1 shadow-sm">
-                            <i class="bi bi-plus-lg"></i>
-                            <span class="fw-semibold">Ajukan Pinjam</span>
-                        </a>
-                    </div>
                 </div>
             </div>
-        </nav>
+        </div>
     </header>
 
-    <!-- Main Content Container -->
-    <main role="main" class="flex-grow-1 py-4">
-        <div class="container-fluid px-md-4 max-w-7xl">
-            <!-- Toast / Flash Messages -->
+    <!-- Main Workspace -->
+    <main class="flex-grow-1 py-4">
+        <div class="container-fluid max-w-7xl px-3 px-md-4">
+            <!-- Flash Message -->
             @if (TempData["SuccessMessage"] != null)
             {
-                <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 rounded-3 mb-4 d-flex align-items-center" role="alert">
-                    <i class="bi bi-check-circle-fill fs-5 me-2 text-success"></i>
-                    <div>@TempData["SuccessMessage"]</div>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                <div class="alert alert-dismissible fade show card-minimal p-3 mb-4 d-flex align-items-center gap-2" role="alert" style="background-color: #f0fdf4; border-color: #bbf7d0;">
+                    <i class="bi bi-check2-circle text-success fs-5"></i>
+                    <div class="small fw-medium text-success-emphasis">@TempData["SuccessMessage"]</div>
+                    <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             }
 
             @if (TempData["ErrorMessage"] != null)
             {
-                <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 rounded-3 mb-4 d-flex align-items-center" role="alert">
-                    <i class="bi bi-exclamation-triangle-fill fs-5 me-2 text-danger"></i>
-                    <div>@TempData["ErrorMessage"]</div>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                <div class="alert alert-dismissible fade show card-minimal p-3 mb-4 d-flex align-items-center gap-2" role="alert" style="background-color: #fff1f2; border-color: #fecdd3;">
+                    <i class="bi bi-exclamation-octagon text-danger fs-5"></i>
+                    <div class="small fw-medium text-danger-emphasis">@TempData["ErrorMessage"]</div>
+                    <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             }
 
@@ -157,19 +357,23 @@
         </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="py-3 text-muted">
-        <div class="container-fluid px-md-4 max-w-7xl d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
-            <span class="small">&copy; @DateTime.Now.Year <strong>SmartRoom</strong> &bull; Campus & Office Room Booking System</span>
-            <div class="d-flex align-items-center gap-3 small">
-                <span class="badge bg-secondary-subtle text-secondary border">ASP.NET Core 8 MVC + REST API</span>
-                <a href="/swagger" class="text-decoration-none text-muted"><i class="bi bi-braces"></i> OpenAPI</a>
-                <a href="https://github.com" target="_blank" class="text-decoration-none text-muted"><i class="bi bi-github"></i> Repository</a>
+    <!-- Minimal Footer -->
+    <footer class="py-3 border-top bg-white">
+        <div class="container-fluid max-w-7xl px-3 px-md-4 d-flex flex-column flex-sm-row align-items-center justify-content-between gap-2 small text-muted">
+            <div class="d-flex align-items-center gap-2">
+                <span class="fw-semibold text-dark">SmartRoom</span>
+                <span>&bull;</span>
+                <span>ASP.NET Core 8 &bull; EF Core &bull; PostgreSQL / SQLite</span>
+            </div>
+            <div class="d-flex align-items-center gap-3 font-mono" style="font-size: 0.78rem;">
+                <a href="/swagger" class="text-decoration-none text-muted hover-dark"><i class="bi bi-filetype-json me-1"></i>OpenAPI 3.0</a>
+                <span>&bull;</span>
+                <span class="badge badge-pill-soft bg-light text-dark border">RBAC Active</span>
             </div>
         </div>
     </footer>
 
-    <!-- Bootstrap 5 Bundle JS -->
+    <!-- Bootstrap 5 Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

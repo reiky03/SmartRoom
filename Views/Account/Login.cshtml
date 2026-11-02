@@ -1,0 +1,67 @@
+@model IEnumerable<SmartRoom.Models.User>
+@{
+    ViewData["Title"] = "Masuk & Simulasi Peran (RBAC)";
+}
+
+<div class="row justify-content-center py-4">
+    <div class="col-12 col-md-9 col-lg-7">
+        <div class="text-center mb-4">
+            <span class="d-inline-flex align-items-center justify-content-center bg-dark text-white rounded-3 mb-2" style="width: 40px; height: 40px;">
+                <i class="bi bi-shield-lock fs-5"></i>
+            </span>
+            <h3 class="fw-bold text-dark mb-1">Akses &amp; Simulasi Peran</h3>
+            <p class="text-muted small">SmartRoom menggunakan Role-Based Access Control (RBAC) untuk membatasi aksi antar peran.</p>
+        </div>
+
+        <!-- 1-Click Interactive Persona Cards -->
+        <div class="card-minimal p-4 mb-4 bg-white">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <span class="text-uppercase text-muted fw-bold font-mono" style="font-size: 0.72rem;">Pilih Akun Simulasi Cepat (1-Klik)</span>
+                <span class="badge bg-light text-secondary border font-mono" style="font-size: 0.7rem;">RBAC Demo Ready</span>
+            </div>
+
+            <div class="row g-2">
+                @foreach (var u in Model)
+                {
+                    <div class="col-12 col-sm-4">
+                        <a asp-action="SwitchRole" asp-route-role="@u.Role" asp-route-returnUrl="@ViewBag.ReturnUrl" 
+                           class="text-decoration-none d-block p-3 rounded-3 border bg-white h-100 text-start hover-shadow-sm transition-all"
+                           style="border-color: #e5e7eb;">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="avatar-circle">@u.AvatarInitials</span>
+                                <span class="badge-pill-soft @(u.Role == SmartRoom.Models.Enums.UserRole.Admin ? "badge-role-admin" : (u.Role == SmartRoom.Models.Enums.UserRole.Staff ? "badge-role-staff" : "badge-role-student"))" style="font-size: 0.65rem;">
+                                    @u.Role
+                                </span>
+                            </div>
+                            <div class="fw-bold text-dark" style="font-size: 0.85rem;">@u.FullName</div>
+                            <div class="text-muted small text-truncate" style="font-size: 0.75rem;">@u.Department</div>
+                            <div class="mt-2 text-primary small fw-semibold" style="font-size: 0.75rem;">
+                                Masuk sebagai @u.Role &rarr;
+                            </div>
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Manual Login Input Form -->
+        <div class="card-minimal p-4 bg-white">
+            <span class="text-uppercase text-muted fw-bold font-mono d-block mb-3" style="font-size: 0.72rem;">Atau Masuk dengan Username</span>
+            
+            <form asp-action="Login" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger p-2 small rounded-2 mb-3"></div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">Username atau Email</label>
+                    <input type="text" name="username" class="form-control" placeholder="admin / staff / student" required autofocus />
+                </div>
+
+                <button type="submit" class="btn btn-minimal-primary w-100 py-2">
+                    Masuk ke Sistem
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
