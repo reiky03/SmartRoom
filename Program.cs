@@ -6,6 +6,17 @@ using SmartRoom.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173", "http://127.0.0.1:5173")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
 builder.Services.AddControllersWithViews()
     .AddJsonOptions(options =>
     {
@@ -88,6 +99,7 @@ else
 }
 
 app.UseHttpsRedirection();
+app.UseDefaultFiles();
 app.UseStaticFiles();
 
 // Enable Swagger UI middleware
@@ -100,14 +112,13 @@ app.UseSwaggerUI(c =>
 });
 
 app.UseRouting();
+app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Route mappings: Web API (Attribute Routing) + MVC (Conventional Routing)
+// Route mappings: Web API (Attribute Routing) + SPA Fallback
 app.MapControllers();
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+app.MapFallbackToFile("index.html");
 
 // Auto-seed Database on Startup
 using (var scope = app.Services.CreateScope())
