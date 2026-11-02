@@ -1,0 +1,27 @@
+/* Custom application styling */
+:root {
+  --sr-primary: #2563eb;
+  --sr-primary-hover: #1d4ed8;
+  --sr-surface: #ffffff;
+  --sr-bg: #f8fafc;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  background-color: var(--sr-bg);
+}
+
+.max-w-7xl {
+  max-width: 80rem;
+}
+
+.shadow-xs {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

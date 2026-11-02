@@ -1,0 +1,184 @@
+@model SmartRoom.DTOs.CreateBookingDto
+@{
+    ViewData["Title"] = "Ajukan Peminjaman Ruangan";
+}
+
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-8">
+        <div class="d-flex align-items-center gap-2 mb-3">
+            <a asp-action="Index" class="btn btn-sm btn-outline-secondary rounded-circle">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <h3 class="fw-bold text-dark mb-0">Formulir Peminjaman Ruangan</h3>
+        </div>
+
+        @if (ViewBag.ConflictAlert != null)
+        {
+            <div class="alert alert-danger shadow-sm border-0 rounded-4 p-3 mb-4 d-flex align-items-start gap-3">
+                <i class="bi bi-exclamation-octagon-fill fs-3 text-danger flex-shrink-0 mt-1"></i>
+                <div>
+                    <h6 class="fw-bold mb-1">Gagal Mengajukan: Jadwal Bentrok Terdeteksi!</h6>
+                    <p class="mb-0 small">@ViewBag.ConflictAlert</p>
+                    <small class="text-danger-emphasis d-block mt-2">
+                        Silakan pilih jam mulai/selesai yang berbeda atau periksa slot terisi pada ruangan yang dipilih.
+                    </small>
+                </div>
+            </div>
+        }
+
+        <div class="card shadow-sm border-0 bg-white">
+            <div class="card-body p-4">
+                <form asp-action="Create" method="post" id="bookingForm">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger rounded-3" role="alert"></div>
+
+                    <div class="row g-3">
+                        <!-- Pilih Ruangan -->
+                        <div class="col-12">
+                            <label asp-for="RoomId" class="form-label fw-semibold small">Pilih Ruangan <span class="text-danger">*</span></label>
+                            <select asp-for="RoomId" class="form-select form-select-lg" asp-items="ViewBag.Rooms" id="selectRoom" required>
+                                <option value="">-- Silakan Pilih Ruangan --</option>
+                            </select>
+                            <span asp-validation-for="RoomId" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Data Peminjam -->
+                        <div class="col-md-6">
+                            <label asp-for="BorrowerName" class="form-label fw-semibold small">Nama Lengkap Peminjam <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-person"></i></span>
+                                <input asp-for="BorrowerName" class="form-control" placeholder="Nama lengkap Anda / Organisasi" required />
+                            </div>
+                            <span asp-validation-for="BorrowerName" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="BorrowerEmail" class="form-label fw-semibold small">Alamat Email Peminjam <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-envelope"></i></span>
+                                <input asp-for="BorrowerEmail" type="email" class="form-control" placeholder="nama@email.com" required />
+                            </div>
+                            <span asp-validation-for="BorrowerEmail" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Tujuan -->
+                        <div class="col-12">
+                            <label asp-for="Purpose" class="form-label fw-semibold small">Tujuan / Agenda Peminjaman <span class="text-danger">*</span></label>
+                            <textarea asp-for="Purpose" rows="2" class="form-control" placeholder="Jelaskan secara singkat kegiatan yang akan diadakan" required></textarea>
+                            <span asp-validation-for="Purpose" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Rentang Waktu -->
+                        <div class="col-md-6">
+                            <label asp-for="StartTime" class="form-label fw-semibold small">Waktu Mulai <span class="text-danger">*</span></label>
+                            <input asp-for="StartTime" type="datetime-local" class="form-control" id="inputStartTime"
+                                   value="@Model.StartTime.ToString("yyyy-MM-ddTHH:mm")" required />
+                            <span asp-validation-for="StartTime" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="EndTime" class="form-label fw-semibold small">Waktu Selesai <span class="text-danger">*</span></label>
+                            <input asp-for="EndTime" type="datetime-local" class="form-control" id="inputEndTime"
+                                   value="@Model.EndTime.ToString("yyyy-MM-ddTHH:mm")" required />
+                            <span asp-validation-for="EndTime" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Information Box: Rules -->
+                        <div class="col-12 mt-3">
+                            <div class="p-3 bg-light rounded-3 border">
+                                <h6 class="fw-bold small text-dark mb-2"><i class="bi bi-info-circle-fill text-primary me-1"></i> Aturan Validasi Otomatis:</h6>
+                                <ul class="small text-muted mb-0 ps-3">
+                                    <li>Waktu mulai harus di masa sekarang/mendatang dan lebih awal dari waktu selesai.</li>
+                                    <li>Durasi peminjaman minimal <strong>30 menit</strong> dan maksimal <strong>8 jam</strong>.</li>
+                                    <li>Sistem secara otomatis menolak pengajuan jika terdapat jadwal lain yang beririsan (Double Booking Prevention).</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Slot Checker Box -->
+                        <div class="col-12" id="slotCheckContainer" style="display: none;">
+                            <div class="border rounded-3 p-3 bg-white shadow-xs">
+                                <h6 class="small fw-bold text-dark mb-2 d-flex align-items-center justify-content-between">
+                                    <span><i class="bi bi-calendar2-range text-info me-1"></i> Slot Terisi Pada Tanggal Terpilih:</span>
+                                    <span class="badge bg-light text-muted border" id="slotDateLabel"></span>
+                                </h6>
+                                <div id="slotList" class="small text-muted">
+                                    Pilih ruangan dan tanggal untuk melihat slot yang sudah terisi.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="col-12 mt-4 pt-3 border-top d-flex justify-content-end gap-2">
+                            <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">Batal</a>
+                            <button type="submit" class="btn btn-primary rounded-pill px-4">
+                                <i class="bi bi-send-check me-1"></i> Ajukan Peminjaman
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const selectRoom = document.getElementById('selectRoom');
+            const inputStartTime = document.getElementById('inputStartTime');
+            const slotContainer = document.getElementById('slotCheckContainer');
+            const slotList = document.getElementById('slotList');
+            const slotDateLabel = document.getElementById('slotDateLabel');
+
+            async function checkSlots() {
+                const roomId = selectRoom.value;
+                const startVal = inputStartTime.value;
+                if (!roomId || !startVal) {
+                    slotContainer.style.display = 'none';
+                    return;
+                }
+
+                const dateStr = startVal.split('T')[0];
+                slotDateLabel.textContent = dateStr;
+
+                try {
+                    const res = await fetch(`/api/rooms/${roomId}/availability?date=${dateStr}`);
+                    if (!res.ok) return;
+                    const data = await res.json();
+                    
+                    slotContainer.style.display = 'block';
+                    if (data.bookedSlots && data.bookedSlots.length > 0) {
+                        let html = '<div class="list-group list-group-flush">';
+                        data.bookedSlots.forEach(slot => {
+                            const start = new Date(slot.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                            const end = new Date(slot.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                            html += `
+                                <div class="list-group-item px-0 py-1 d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="fw-semibold text-danger"><i class="bi bi-x-circle me-1"></i> ${start} - ${end}</span>
+                                        <span class="text-muted ms-2">(${slot.borrowerName}: ${slot.purpose})</span>
+                                    </div>
+                                    <span class="badge ${slot.status === 'Approved' ? 'badge-status-approved' : 'badge-status-pending'} rounded-pill">${slot.status}</span>
+                                </div>
+                            `;
+                        });
+                        html += '</div>';
+                        slotList.innerHTML = html;
+                    } else {
+                        slotList.innerHTML = '<span class="text-success"><i class="bi bi-check-circle me-1"></i> Belum ada jadwal terisi pada tanggal ini (Semua jam tersedia).</span>';
+                    }
+                } catch (e) {
+                    console.error('Error fetching availability:', e);
+                }
+            }
+
+            selectRoom.addEventListener('change', checkSlots);
+            inputStartTime.addEventListener('change', checkSlots);
+            if (selectRoom.value && inputStartTime.value) {
+                checkSlots();
+            }
+        });
+    </script>
+}

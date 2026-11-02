@@ -1,0 +1,136 @@
+@model IEnumerable<SmartRoom.Models.Room>
+@{
+    ViewData["Title"] = "Manajemen Ruangan";
+    bool? currentFilter = ViewBag.CurrentFilter;
+}
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">
+            <i class="bi bi-door-open-fill text-primary me-2"></i>Manajemen Ruangan
+        </h2>
+        <p class="text-muted mb-0">Kelola inventaris ruangan rapat, aula, laboratorium, dan kapasitasnya.</p>
+    </div>
+    <div>
+        <a asp-action="Create" class="btn btn-primary rounded-pill px-4 shadow-sm d-inline-flex align-items-center gap-2">
+            <i class="bi bi-plus-lg"></i> Tambah Ruangan Baru
+        </a>
+    </div>
+</div>
+
+<!-- Filter Tabs -->
+<div class="card shadow-sm border-0 mb-4 bg-white">
+    <div class="card-body py-2 px-3">
+        <ul class="nav nav-pills gap-2">
+            <li class="nav-item">
+                <a class="nav-link rounded-pill px-3 py-1 small @(currentFilter == null ? "active" : "")" asp-action="Index">
+                    Semua Ruangan (@Model.Count())
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link rounded-pill px-3 py-1 small @(currentFilter == true ? "active" : "")" asp-action="Index" asp-route-isActive="true">
+                    <i class="bi bi-check2-circle text-success me-1"></i> Aktif Saja
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link rounded-pill px-3 py-1 small @(currentFilter == false ? "active" : "")" asp-action="Index" asp-route-isActive="false">
+                    <i class="bi bi-dash-circle text-danger me-1"></i> Nonaktif
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<!-- Room Cards Grid -->
+<div class="row g-4">
+    @if (Model.Any())
+    {
+        @foreach (var room in Model)
+        {
+            <div class="col-12 col-md-6 col-xl-4">
+                <div class="card h-100 shadow-sm border-0 bg-white d-flex flex-column">
+                    <div class="card-body p-4 flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge font-monospace bg-light text-dark border px-2 py-1">@room.RoomCode</span>
+                            @if (room.IsActive)
+                            {
+                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">
+                                    <i class="bi bi-circle-fill fs-xs me-1"></i> Aktif
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3">
+                                    <i class="bi bi-x-circle me-1"></i> Nonaktif
+                                </span>
+                            }
+                        </div>
+
+                        <h5 class="card-title fw-bold text-dark mt-2 mb-1">@room.Name</h5>
+                        <p class="text-muted small mb-3">
+                            <i class="bi bi-geo-alt-fill text-secondary me-1"></i> @room.Building
+                        </p>
+
+                        <div class="d-flex align-items-center gap-3 py-2 border-top border-bottom my-3">
+                            <div>
+                                <small class="text-muted d-block">Kapasitas</small>
+                                <span class="fw-bold text-dark"><i class="bi bi-people-fill text-primary me-1"></i>@room.Capacity Orang</span>
+                            </div>
+                            <div class="vr"></div>
+                            <div>
+                                <small class="text-muted d-block">Terdaftar Sejak</small>
+                                <span class="text-dark small">@room.CreatedAt.ToString("dd MMM yyyy")</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <small class="text-muted d-block mb-1">Fasilitas:</small>
+                            <p class="small text-secondary mb-0 line-clamp-2">
+                                @(string.IsNullOrWhiteSpace(room.Facilities) ? "Tidak ada catatan fasilitas" : room.Facilities)
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="card-footer bg-light border-0 py-3 px-4 d-flex justify-content-between align-items-center">
+                        <div class="d-flex gap-1">
+                            <a asp-action="Edit" asp-route-id="@room.Id" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                                <i class="bi bi-pencil me-1"></i> Edit
+                            </a>
+                            <form asp-action="ToggleStatus" asp-route-id="@room.Id" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm @(room.IsActive ? "btn-outline-warning" : "btn-outline-success") rounded-pill px-3"
+                                        title="@(room.IsActive ? "Nonaktifkan Ruangan" : "Aktifkan Ruangan")">
+                                    <i class="bi @(room.IsActive ? "bi-toggle2-on" : "bi-toggle2-off") me-1"></i>
+                                    @(room.IsActive ? "Matikan" : "Aktifkan")
+                                </button>
+                            </form>
+                        </div>
+
+                        <form asp-action="Delete" asp-route-id="@room.Id" method="post" class="d-inline"
+                              onsubmit="return confirm('Apakah Anda yakin ingin menghapus ruangan ini? Pastikan tidak ada jadwal aktif.');">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle p-2" title="Hapus Ruangan">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="col-12">
+            <div class="card shadow-sm border-0 text-center py-5 bg-white">
+                <i class="bi bi-door-closed display-4 text-muted mb-3"></i>
+                <h5 class="fw-bold text-dark">Tidak Ada Ruangan yang Ditemukan</h5>
+                <p class="text-muted small">Mulai tambahkan ruangan untuk sistem peminjaman Anda.</p>
+                <div class="mt-2">
+                    <a asp-action="Create" class="btn btn-primary rounded-pill px-4">
+                        <i class="bi bi-plus-lg me-1"></i> Tambah Ruangan Baru
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
+</div>
