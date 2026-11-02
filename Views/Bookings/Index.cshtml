@@ -1,138 +1,132 @@
 @model IEnumerable<SmartRoom.Models.Booking>
 @{
-    ViewData["Title"] = "Jadwal & Riwayat Peminjaman";
+    ViewData["Title"] = "Jadwal Peminjaman";
 }
 
 <!-- Page Header -->
-<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 pb-3 border-bottom">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-6 border-b border-slate-200">
     <div>
-        <div class="d-flex align-items-center gap-2 mb-1">
-            <span class="badge bg-light text-muted border font-mono" style="font-size: 0.7rem;">KALENDER &amp; AGENDA</span>
-            <span class="text-muted small">&bull;</span>
-            <span class="text-muted small font-mono">@Model.Count() PENGAJUAN</span>
-        </div>
-        <h2 class="fw-bold text-dark mb-0 tracking-tight" style="font-size: 1.65rem;">
-            Daftar &amp; Riwayat Peminjaman
-        </h2>
+        <div class="text-[11px] font-mono text-slate-400 uppercase tracking-wider mb-1">Agenda &amp; Reservasi</div>
+        <h1 class="text-2xl font-bold tracking-tight text-slate-900">Daftar Jadwal Peminjaman</h1>
+        <p class="text-xs text-slate-500 mt-0.5">Pantau seluruh agenda peminjaman ruangan yang telah diajukan di sistem</p>
     </div>
-    <div class="d-flex align-items-center gap-2">
-        <a asp-action="Create" class="btn btn-minimal-primary d-inline-flex align-items-center gap-1.5">
-            <i class="bi bi-calendar-plus"></i>
-            <span>Ajukan Peminjaman</span>
-        </a>
-    </div>
+
+    <a asp-action="Create" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-sm transition-all">
+        <i data-lucide="plus" class="w-4 h-4"></i>
+        <span>Ajukan Peminjaman</span>
+    </a>
 </div>
 
-<!-- Minimal Search / Filter Bar -->
-<div class="card-minimal p-3 bg-white mb-4">
-    <form method="get" asp-action="Index" class="row g-2 align-items-end">
-        <div class="col-12 col-md-4">
-            <label class="form-label font-mono text-muted small mb-1" style="font-size: 0.72rem;">FILTER RUANGAN</label>
-            <select name="roomId" class="form-select form-select-sm" asp-items="ViewBag.Rooms">
+<!-- Modern Filter Bar -->
+<div class="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-sm mb-6">
+    <form method="get" asp-action="Index" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
+        <div>
+            <label class="block text-[11px] font-mono uppercase tracking-wider font-semibold text-slate-500 mb-1">Filter Ruangan</label>
+            <select name="roomId" class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-xs text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none" asp-items="ViewBag.Rooms">
                 <option value="">— Semua Ruangan —</option>
             </select>
         </div>
 
-        <div class="col-12 col-md-3">
-            <label class="form-label font-mono text-muted small mb-1" style="font-size: 0.72rem;">STATUS JADWAL</label>
-            <select name="status" class="form-select form-select-sm">
+        <div>
+            <label class="block text-[11px] font-mono uppercase tracking-wider font-semibold text-slate-500 mb-1">Status Peminjaman</label>
+            <select name="status" class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-xs text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
                 <option value="">— Semua Status —</option>
-                <option value="0" selected="@(ViewBag.CurrentStatus?.ToString() == "Pending")">Pending (Menunggu)</option>
-                <option value="1" selected="@(ViewBag.CurrentStatus?.ToString() == "Approved")">Approved (Disetujui)</option>
-                <option value="2" selected="@(ViewBag.CurrentStatus?.ToString() == "Rejected")">Rejected (Ditolak)</option>
-                <option value="3" selected="@(ViewBag.CurrentStatus?.ToString() == "Cancelled")">Cancelled (Dibatalkan)</option>
+                <option value="0" selected="@(ViewBag.CurrentStatus?.ToString() == "Pending")">Menunggu (Pending)</option>
+                <option value="1" selected="@(ViewBag.CurrentStatus?.ToString() == "Approved")">Disetujui (Approved)</option>
+                <option value="2" selected="@(ViewBag.CurrentStatus?.ToString() == "Rejected")">Ditolak (Rejected)</option>
+                <option value="3" selected="@(ViewBag.CurrentStatus?.ToString() == "Cancelled")">Dibatalkan (Cancelled)</option>
             </select>
         </div>
 
-        <div class="col-12 col-md-3">
-            <label class="form-label font-mono text-muted small mb-1" style="font-size: 0.72rem;">TANGGAL</label>
-            <input type="date" name="date" value="@ViewBag.CurrentDate" class="form-control form-control-sm font-mono" />
+        <div>
+            <label class="block text-[11px] font-mono uppercase tracking-wider font-semibold text-slate-500 mb-1">Tanggal</label>
+            <input type="date" name="date" value="@ViewBag.CurrentDate" class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-xs text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none font-mono" />
         </div>
 
-        <div class="col-12 col-md-2 d-flex gap-1.5">
-            <button type="submit" class="btn btn-sm btn-minimal-primary w-100 py-1.5">
-                <i class="bi bi-funnel me-1"></i> Terapkan
+        <div class="flex items-center gap-2">
+            <button type="submit" class="flex-1 py-2 px-3 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition-colors flex items-center justify-center gap-1.5">
+                <i data-lucide="filter" class="w-3.5 h-3.5"></i>
+                <span>Terapkan</span>
             </button>
-            <a asp-action="Index" class="btn btn-sm btn-minimal-secondary py-1.5 px-2.5" title="Reset">
-                <i class="bi bi-arrow-counterclockwise"></i>
+            <a asp-action="Index" class="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 transition-colors" title="Reset Filter">
+                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
             </a>
         </div>
     </form>
 </div>
 
-<!-- Bookings Table -->
-<div class="card-minimal bg-white overflow-hidden">
+<!-- Table Card -->
+<div class="rounded-2xl bg-white border border-slate-200/80 shadow-sm overflow-hidden">
     @if (Model.Any())
     {
-        <div class="table-responsive">
-            <table class="table-minimal">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr>
-                        <th>No. Referensi</th>
-                        <th>Ruangan &amp; Lokasi</th>
-                        <th>Peminjam</th>
-                        <th>Agenda &amp; Tujuan</th>
-                        <th>Jadwal Pelaksanaan</th>
-                        <th>Status</th>
-                        <th>Catatan Admin</th>
+                    <tr class="bg-slate-50/80 border-b border-slate-200/80 text-[11px] font-mono uppercase tracking-wider text-slate-500">
+                        <th class="py-3 px-5">Referensi</th>
+                        <th class="py-3 px-5">Ruangan &amp; Gedung</th>
+                        <th class="py-3 px-5">Pemohon</th>
+                        <th class="py-3 px-5">Agenda / Tujuan</th>
+                        <th class="py-3 px-5">Jadwal Penggunaan</th>
+                        <th class="py-3 px-5">Status</th>
+                        <th class="py-3 px-5">Catatan Admin</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="divide-y divide-slate-100 text-xs text-slate-700">
                     @foreach (var b in Model)
                     {
-                        <tr>
-                            <td>
-                                <span class="font-mono fw-semibold text-dark">@b.BookingReference</span>
-                                <div class="text-muted font-mono" style="font-size: 0.7rem;">@b.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
+                        <tr class="hover:bg-slate-50/80 transition-colors">
+                            <td class="py-3.5 px-5">
+                                <span class="font-mono font-semibold text-slate-900">@b.BookingReference</span>
+                                <div class="text-[10px] text-slate-400 font-mono">@b.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
                             </td>
-                            <td>
-                                <div class="fw-medium text-dark">@(b.Room?.Name ?? $"Ruangan #{b.RoomId}")</div>
-                                <div class="text-muted font-mono" style="font-size: 0.72rem;">@(b.Room?.RoomCode ?? "-") &bull; @(b.Room?.Building ?? "-")</div>
+                            <td class="py-3.5 px-5">
+                                <div class="font-semibold text-slate-900">@(b.Room?.Name ?? $"Ruangan #{b.RoomId}")</div>
+                                <div class="text-[11px] font-mono text-slate-400">@(b.Room?.RoomCode ?? "-") &bull; @(b.Room?.Building ?? "-")</div>
                             </td>
-                            <td>
-                                <div class="fw-medium text-dark">@b.BorrowerName</div>
-                                <div class="text-muted small" style="font-size: 0.75rem;">@b.BorrowerEmail</div>
+                            <td class="py-3.5 px-5">
+                                <div class="font-medium text-slate-900">@b.BorrowerName</div>
+                                <div class="text-[11px] text-slate-400">@b.BorrowerEmail</div>
                             </td>
-                            <td>
-                                <span class="text-truncate d-inline-block" style="max-width: 220px;" title="@b.Purpose">
-                                    @b.Purpose
-                                </span>
+                            <td class="py-3.5 px-5 max-w-xs truncate" title="@b.Purpose">
+                                @b.Purpose
                             </td>
-                            <td>
-                                <div class="font-mono text-dark fw-medium">
-                                    <i class="bi bi-calendar3 me-1 text-muted"></i>@b.StartTime.ToString("dd MMM yyyy")
+                            <td class="py-3.5 px-5 font-mono">
+                                <div class="font-semibold text-slate-800">
+                                    <i data-lucide="calendar" class="w-3.5 h-3.5 inline mr-1 text-slate-400"></i>
+                                    @b.StartTime.ToString("dd MMM yyyy")
                                 </div>
-                                <div class="text-muted font-mono" style="font-size: 0.72rem;">
-                                    <i class="bi bi-clock me-1"></i>@b.StartTime.ToString("HH:mm") — @b.EndTime.ToString("HH:mm")
+                                <div class="text-[11px] text-slate-500 mt-0.5">
+                                    @b.StartTime.ToString("HH:mm") — @b.EndTime.ToString("HH:mm")
                                 </div>
                             </td>
-                            <td>
+                            <td class="py-3.5 px-5">
                                 @switch (b.Status)
                                 {
                                     case SmartRoom.Models.Enums.BookingStatus.Pending:
-                                        <span class="badge-pill-soft badge-soft-pending">
-                                            <i class="bi bi-hourglass-split"></i> Pending
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Pending
                                         </span>
                                         break;
                                     case SmartRoom.Models.Enums.BookingStatus.Approved:
-                                        <span class="badge-pill-soft badge-soft-approved">
-                                            <i class="bi bi-check2"></i> Approved
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Approved
                                         </span>
                                         break;
                                     case SmartRoom.Models.Enums.BookingStatus.Rejected:
-                                        <span class="badge-pill-soft badge-soft-rejected">
-                                            <i class="bi bi-x"></i> Rejected
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Rejected
                                         </span>
                                         break;
                                     case SmartRoom.Models.Enums.BookingStatus.Cancelled:
-                                        <span class="badge-pill-soft badge-soft-cancelled">
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">
                                             Cancelled
                                         </span>
                                         break;
                                 }
                             </td>
-                            <td>
-                                <span class="text-secondary small" style="font-size: 0.78rem;">
+                            <td class="py-3.5 px-5">
+                                <span class="text-slate-500">
                                     @(string.IsNullOrWhiteSpace(b.AdminNotes) ? "—" : b.AdminNotes)
                                 </span>
                             </td>
@@ -144,10 +138,14 @@
     }
     else
     {
-        <div class="py-5 text-center text-muted">
-            <i class="bi bi-inbox display-6 text-muted mb-2 d-block opacity-25"></i>
-            <h6 class="fw-bold text-dark">Tidak Ada Data Peminjaman</h6>
-            <p class="text-muted small mb-0">Tidak ditemukan permohonan yang sesuai kriteria pencarian.</p>
+        <div class="py-16 text-center text-slate-400">
+            <i data-lucide="inbox" class="w-10 h-10 mx-auto mb-2 opacity-30"></i>
+            <div class="text-xs font-medium text-slate-700">Tidak ada jadwal peminjaman ditemukan</div>
+            <div class="text-[11px] text-slate-400 mt-0.5">Ubah kriteria filter atau buat peminjaman baru.</div>
         </div>
     }
 </div>
+
+@section Scripts {
+    <script>lucide.createIcons();</script>
+}

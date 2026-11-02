@@ -16,6 +16,10 @@ public class User
     public string Username { get; set; } = string.Empty;
 
     [Required]
+    [StringLength(255)]
+    public string PasswordHash { get; set; } = string.Empty;
+
+    [Required]
     [StringLength(100)]
     public string FullName { get; set; } = string.Empty;
 
@@ -34,4 +38,6 @@ public class User
     public string AvatarInitials { get; set; } = "SR";
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
 }

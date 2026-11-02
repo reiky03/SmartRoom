@@ -1,67 +1,158 @@
-@model IEnumerable<SmartRoom.Models.User>
+@model SmartRoom.Controllers.LoginViewModel
 @{
-    ViewData["Title"] = "Masuk & Simulasi Peran (RBAC)";
+    ViewData["Title"] = "Masuk ke Sistem SmartRoom";
+    Layout = null; // Clean focused login page
 }
+<!DOCTYPE html>
+<html lang="id" class="h-full bg-slate-900">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Masuk — SmartRoom</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; letter-spacing: -0.012em; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+    </style>
+</head>
+<body class="h-full flex items-center justify-center p-4 antialiased bg-slate-950 text-slate-100">
 
-<div class="row justify-content-center py-4">
-    <div class="col-12 col-md-9 col-lg-7">
-        <div class="text-center mb-4">
-            <span class="d-inline-flex align-items-center justify-content-center bg-dark text-white rounded-3 mb-2" style="width: 40px; height: 40px;">
-                <i class="bi bi-shield-lock fs-5"></i>
-            </span>
-            <h3 class="fw-bold text-dark mb-1">Akses &amp; Simulasi Peran</h3>
-            <p class="text-muted small">SmartRoom menggunakan Role-Based Access Control (RBAC) untuk membatasi aksi antar peran.</p>
+    <div class="w-full max-w-md">
+        <!-- Brand Header -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-emerald-500 text-slate-950 font-bold mb-3 shadow-lg shadow-emerald-500/25">
+                <i data-lucide="building-2" class="w-6 h-6 text-slate-950"></i>
+            </div>
+            <h1 class="text-2xl font-bold tracking-tight text-white">SmartRoom Portal</h1>
+            <p class="text-xs text-slate-400 mt-1">Sistem Otentikasi &amp; Peminjaman Ruangan Berbasis Role (RBAC)</p>
         </div>
 
-        <!-- 1-Click Interactive Persona Cards -->
-        <div class="card-minimal p-4 mb-4 bg-white">
-            <div class="d-flex align-items-center justify-content-between mb-3">
-                <span class="text-uppercase text-muted fw-bold font-mono" style="font-size: 0.72rem;">Pilih Akun Simulasi Cepat (1-Klik)</span>
-                <span class="badge bg-light text-secondary border font-mono" style="font-size: 0.7rem;">RBAC Demo Ready</span>
-            </div>
+        <!-- Login Card -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl">
+            <!-- Flash Alert -->
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="mb-5 p-3 rounded-xl bg-emerald-950/60 border border-emerald-800 text-emerald-300 text-xs flex items-center gap-2">
+                    <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400 flex-shrink-0"></i>
+                    <span>@TempData["SuccessMessage"]</span>
+                </div>
+            }
 
-            <div class="row g-2">
-                @foreach (var u in Model)
-                {
-                    <div class="col-12 col-sm-4">
-                        <a asp-action="SwitchRole" asp-route-role="@u.Role" asp-route-returnUrl="@ViewBag.ReturnUrl" 
-                           class="text-decoration-none d-block p-3 rounded-3 border bg-white h-100 text-start hover-shadow-sm transition-all"
-                           style="border-color: #e5e7eb;">
-                            <div class="d-flex align-items-center justify-content-between mb-2">
-                                <span class="avatar-circle">@u.AvatarInitials</span>
-                                <span class="badge-pill-soft @(u.Role == SmartRoom.Models.Enums.UserRole.Admin ? "badge-role-admin" : (u.Role == SmartRoom.Models.Enums.UserRole.Staff ? "badge-role-staff" : "badge-role-student"))" style="font-size: 0.65rem;">
-                                    @u.Role
-                                </span>
-                            </div>
-                            <div class="fw-bold text-dark" style="font-size: 0.85rem;">@u.FullName</div>
-                            <div class="text-muted small text-truncate" style="font-size: 0.75rem;">@u.Department</div>
-                            <div class="mt-2 text-primary small fw-semibold" style="font-size: 0.75rem;">
-                                Masuk sebagai @u.Role &rarr;
-                            </div>
-                        </a>
-                    </div>
-                }
-            </div>
-        </div>
-
-        <!-- Manual Login Input Form -->
-        <div class="card-minimal p-4 bg-white">
-            <span class="text-uppercase text-muted fw-bold font-mono d-block mb-3" style="font-size: 0.72rem;">Atau Masuk dengan Username</span>
-            
-            <form asp-action="Login" method="post">
+            <form asp-action="Login" method="post" class="space-y-4">
                 @Html.AntiForgeryToken()
-                <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
-                <div asp-validation-summary="ModelOnly" class="alert alert-danger p-2 small rounded-2 mb-3"></div>
+                <input type="hidden" asp-for="ReturnUrl" />
 
-                <div class="mb-3">
-                    <label class="form-label small fw-semibold text-secondary">Username atau Email</label>
-                    <input type="text" name="username" class="form-control" placeholder="admin / staff / student" required autofocus />
+                <div asp-validation-summary="ModelOnly" class="p-3 rounded-lg bg-rose-950/60 border border-rose-800 text-rose-300 text-xs"></div>
+
+                <!-- Username Input -->
+                <div>
+                    <label class="block text-xs font-semibold uppercase font-mono tracking-wider text-slate-300 mb-1.5">
+                        Username atau Email
+                    </label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
+                            <i data-lucide="user" class="w-4 h-4"></i>
+                        </span>
+                        <input asp-for="Username" id="inputUsername" class="w-full pl-9 pr-3 py-2.5 rounded-lg bg-slate-950 border border-slate-800 text-white placeholder-slate-600 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                               placeholder="admin / staff / student" required autofocus />
+                    </div>
                 </div>
 
-                <button type="submit" class="btn btn-minimal-primary w-100 py-2">
-                    Masuk ke Sistem
+                <!-- Password Input -->
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="block text-xs font-semibold uppercase font-mono tracking-wider text-slate-300">
+                            Kata Sandi (Password)
+                        </label>
+                    </div>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
+                            <i data-lucide="lock" class="w-4 h-4"></i>
+                        </span>
+                        <input asp-for="Password" id="inputPassword" type="password" class="w-full pl-9 pr-10 py-2.5 rounded-lg bg-slate-950 border border-slate-800 text-white placeholder-slate-600 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                               placeholder="••••••••" required />
+                        <button type="button" onclick="togglePassword()" class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-500 hover:text-slate-300">
+                            <i data-lucide="eye" id="eyeIcon" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Remember Me -->
+                <div class="flex items-center justify-between text-xs pt-1">
+                    <label class="flex items-center gap-2 cursor-pointer text-slate-400 hover:text-slate-200">
+                        <input asp-for="RememberMe" type="checkbox" class="w-4 h-4 rounded bg-slate-950 border-slate-700 text-emerald-500 focus:ring-emerald-500">
+                        <span>Ingat saya selama 30 hari</span>
+                    </label>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="w-full py-2.5 px-4 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm tracking-wide shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2 mt-2">
+                    <i data-lucide="log-in" class="w-4 h-4"></i>
+                    <span>Masuk ke Akun</span>
                 </button>
             </form>
+
+            <!-- Quick Auto-Fill Badges for Evaluator/User Convenience -->
+            <div class="mt-6 pt-5 border-t border-slate-800/80">
+                <div class="text-[11px] font-mono uppercase tracking-wider text-slate-400 text-center mb-3">
+                    Kredensial Akun Pengujian (1-Klik Isi):
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                    <button type="button" onclick="fillCreds('admin', 'admin123')" class="p-2 rounded-lg bg-slate-950 border border-slate-800 hover:border-rose-500/50 text-left transition-colors">
+                        <div class="flex items-center gap-1 text-[11px] font-bold text-rose-400 font-mono">
+                            <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span> Admin
+                        </div>
+                        <div class="text-[10px] text-slate-400 font-mono mt-0.5">admin123</div>
+                    </button>
+                    <button type="button" onclick="fillCreds('staff', 'staff123')" class="p-2 rounded-lg bg-slate-950 border border-slate-800 hover:border-blue-500/50 text-left transition-colors">
+                        <div class="flex items-center gap-1 text-[11px] font-bold text-blue-400 font-mono">
+                            <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span> Staff
+                        </div>
+                        <div class="text-[10px] text-slate-400 font-mono mt-0.5">staff123</div>
+                    </button>
+                    <button type="button" onclick="fillCreds('student', 'student123')" class="p-2 rounded-lg bg-slate-950 border border-slate-800 hover:border-emerald-500/50 text-left transition-colors">
+                        <div class="flex items-center gap-1 text-[11px] font-bold text-emerald-400 font-mono">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Student
+                        </div>
+                        <div class="text-[10px] text-slate-400 font-mono mt-0.5">student123</div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Register Option -->
+            <div class="mt-5 text-center text-xs text-slate-400">
+                Belum memiliki akun?
+                <a asp-action="Register" class="text-emerald-400 hover:text-emerald-300 font-semibold underline underline-offset-2 ml-1">
+                    Daftar Mahasiswa Baru
+                </a>
+            </div>
+        </div>
+
+        <!-- Footer Info -->
+        <div class="text-center text-slate-500 text-xs mt-6 font-mono">
+            SmartRoom ASP.NET Core 8 &bull; REST API &bull; PostgreSQL
         </div>
     </div>
-</div>
+
+    <script>
+        lucide.createIcons();
+
+        function togglePassword() {
+            const pwd = document.getElementById('inputPassword');
+            pwd.type = pwd.type === 'password' ? 'text' : 'password';
+        }
+
+        function fillCreds(u, p) {
+            document.getElementById('inputUsername').value = u;
+            document.getElementById('inputPassword').value = p;
+        }
+    </script>
+</body>
+</html>

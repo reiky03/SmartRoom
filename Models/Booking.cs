@@ -23,6 +23,11 @@ public class Booking
     [ForeignKey(nameof(RoomId))]
     public Room? Room { get; set; }
 
+    public int? UserId { get; set; }
+
+    [ForeignKey(nameof(UserId))]
+    public User? User { get; set; }
+
     [Required(ErrorMessage = "Nama peminjam wajib diisi")]
     [StringLength(100, ErrorMessage = "Nama peminjam maksimal 100 karakter")]
     [Display(Name = "Nama Peminjam")]

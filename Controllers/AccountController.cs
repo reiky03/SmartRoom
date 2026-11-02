@@ -1,16 +1,37 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SmartRoom.Data;
+using SmartRoom.Models;
 using SmartRoom.Models.Enums;
 
 namespace SmartRoom.Controllers;
 
+public class LoginViewModel
+{
+    public string Username { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
+    public bool RememberMe { get; set; } = false;
+    public string? ReturnUrl { get; set; }
+}
+
+public class RegisterViewModel
+{
+    public string Username { get; set; } = string.Empty;
+    public string FullName { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
+    public string ConfirmPassword { get; set; } = string.Empty;
+    public string Department { get; set; } = string.Empty;
+}
+
 public class AccountController : Controller
 {
     private readonly AppDbContext _context;
+    private readonly PasswordHasher<User> _passwordHasher = new();
 
     public AccountController(AppDbContext context)
     {
@@ -18,70 +39,124 @@ public class AccountController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Login(string? returnUrl)
+    public IActionResult Login(string? returnUrl)
     {
         if (User.Identity?.IsAuthenticated == true)
         {
             return Redirect(returnUrl ?? "/");
         }
 
-        ViewBag.ReturnUrl = returnUrl;
-        var users = await _context.Users.OrderBy(u => u.Role).ToListAsync();
-        return View(users);
+        return View(new LoginViewModel { ReturnUrl = returnUrl });
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Login(string username, string? returnUrl)
+    public async Task<IActionResult> Login(LoginViewModel model)
     {
+        if (string.IsNullOrWhiteSpace(model.Username) || string.IsNullOrWhiteSpace(model.Password))
+        {
+            ModelState.AddModelError(string.Empty, "Username dan password wajib diisi.");
+            return View(model);
+        }
+
+        var normalizedUsername = model.Username.Trim().ToLowerInvariant();
         var user = await _context.Users.FirstOrDefaultAsync(u => 
-            u.Username.ToLower() == username.Trim().ToLower() || 
-            u.Email.ToLower() == username.Trim().ToLower());
+            u.Username.ToLower() == normalizedUsername || 
+            u.Email.ToLower() == normalizedUsername);
 
         if (user == null)
         {
-            ModelState.AddModelError(string.Empty, "Pengguna tidak ditemukan. Silakan pilih salah satu persona simulasi di bawah.");
-            var users = await _context.Users.OrderBy(u => u.Role).ToListAsync();
-            return View(users);
+            ModelState.AddModelError(string.Empty, "Username/email atau kata sandi tidak sesuai.");
+            return View(model);
         }
 
-        await SignInUserAsync(user);
-
-        if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+        var result = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, model.Password);
+        if (result == PasswordVerificationResult.Failed)
         {
-            return Redirect(returnUrl);
+            ModelState.AddModelError(string.Empty, "Username/email atau kata sandi tidak sesuai.");
+            return View(model);
+        }
+
+        await SignInUserAsync(user, model.RememberMe);
+
+        TempData["SuccessMessage"] = $"Selamat datang kembali, {user.FullName}!";
+
+        if (!string.IsNullOrEmpty(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
+        {
+            return Redirect(model.ReturnUrl);
         }
 
         return RedirectToAction("Index", "Home");
     }
 
     [HttpGet]
-    public async Task<IActionResult> SwitchRole(string role, string? returnUrl)
+    public IActionResult Register()
     {
-        if (Enum.TryParse<UserRole>(role, true, out var targetRole))
+        if (User.Identity?.IsAuthenticated == true)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Role == targetRole);
-            if (user != null)
-            {
-                await SignInUserAsync(user);
-                TempData["SuccessMessage"] = $"Beralih peran aktif sebagai {user.Role}: {user.FullName} ({user.Department})";
-            }
+            return RedirectToAction("Index", "Home");
+        }
+        return View(new RegisterViewModel());
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Register(RegisterViewModel model)
+    {
+        if (model.Password != model.ConfirmPassword)
+        {
+            ModelState.AddModelError("ConfirmPassword", "Konfirmasi kata sandi tidak cocok.");
+            return View(model);
         }
 
-        if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+        var normalizedUsername = model.Username.Trim().ToLowerInvariant();
+        var normalizedEmail = model.Email.Trim().ToLowerInvariant();
+
+        if (await _context.Users.AnyAsync(u => u.Username.ToLower() == normalizedUsername))
         {
-            return Redirect(returnUrl);
+            ModelState.AddModelError("Username", "Username sudah digunakan oleh akun lain.");
+            return View(model);
         }
 
+        if (await _context.Users.AnyAsync(u => u.Email.ToLower() == normalizedEmail))
+        {
+            ModelState.AddModelError("Email", "Alamat email sudah terdaftar.");
+            return View(model);
+        }
+
+        // Initials from full name
+        var parts = model.FullName.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var initials = parts.Length >= 2 
+            ? $"{parts[0][0]}{parts[1][0]}".ToUpperInvariant() 
+            : (model.FullName.Length >= 2 ? model.FullName[..2].ToUpperInvariant() : "SR");
+
+        var newUser = new User
+        {
+            Username = normalizedUsername,
+            FullName = model.FullName.Trim(),
+            Email = normalizedEmail,
+            Department = model.Department.Trim(),
+            Role = UserRole.Student, // Default registration is Student
+            AvatarInitials = initials,
+            CreatedAt = DateTime.UtcNow
+        };
+        newUser.PasswordHash = _passwordHasher.HashPassword(newUser, model.Password);
+
+        await _context.Users.AddAsync(newUser);
+        await _context.SaveChangesAsync();
+
+        await SignInUserAsync(newUser, false);
+        TempData["SuccessMessage"] = "Pendaftaran akun berhasil! Anda masuk sebagai Mahasiswa.";
         return RedirectToAction("Index", "Home");
     }
 
-    [HttpGet]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Logout()
     {
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        TempData["SuccessMessage"] = "Anda telah keluar dari sesi.";
-        return RedirectToAction("Index", "Home");
+        TempData["SuccessMessage"] = "Sesi akun Anda telah berhasil ditutup.";
+        return RedirectToAction("Login");
     }
 
     [HttpGet]
@@ -90,7 +165,7 @@ public class AccountController : Controller
         return View();
     }
 
-    private async Task SignInUserAsync(Models.User user)
+    private async Task SignInUserAsync(User user, bool isPersistent)
     {
         var claims = new List<Claim>
         {
@@ -106,8 +181,8 @@ public class AccountController : Controller
         var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
         var authProperties = new AuthenticationProperties
         {
-            IsPersistent = true,
-            ExpiresUtc = DateTimeOffset.UtcNow.AddDays(7)
+            IsPersistent = isPersistent,
+            ExpiresUtc = isPersistent ? DateTimeOffset.UtcNow.AddDays(30) : DateTimeOffset.UtcNow.AddHours(12)
         };
 
         await HttpContext.SignInAsync(

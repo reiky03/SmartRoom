@@ -140,6 +140,7 @@ public class BookingService : IBookingService
         {
             BookingReference = reference,
             RoomId = dto.RoomId,
+            UserId = dto.UserId,
             BorrowerName = dto.BorrowerName.Trim(),
             BorrowerEmail = dto.BorrowerEmail.Trim().ToLowerInvariant(),
             Purpose = dto.Purpose.Trim(),

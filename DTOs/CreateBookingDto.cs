@@ -7,6 +7,8 @@ public class CreateBookingDto
     [Required(ErrorMessage = "Ruangan wajib dipilih")]
     public int RoomId { get; set; }
 
+    public int? UserId { get; set; }
+
     [Required(ErrorMessage = "Nama peminjam wajib diisi")]
     [StringLength(100, ErrorMessage = "Nama peminjam maksimal 100 karakter")]
     public string BorrowerName { get; set; } = string.Empty;

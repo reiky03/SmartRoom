@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SmartRoom.Models;
 using SmartRoom.Models.Enums;
@@ -11,43 +12,48 @@ public static class DbSeeder
         // Ensure database is created
         await context.Database.EnsureCreatedAsync();
 
+        var hasher = new PasswordHasher<User>();
+
         // Seed Users if empty
         if (!await context.Users.AnyAsync())
         {
-            var defaultUsers = new List<User>
+            var adminUser = new User
             {
-                new()
-                {
-                    Username = "admin",
-                    FullName = "Dr. Hendra Wijaya, M.Sc.",
-                    Email = "admin@smartroom.ac.id",
-                    Role = UserRole.Admin,
-                    Department = "Biro Sarana & Fasilitas Kampus",
-                    AvatarInitials = "HW",
-                    CreatedAt = DateTime.UtcNow.AddMonths(-1)
-                },
-                new()
-                {
-                    Username = "staff",
-                    FullName = "Siti Nurhaliza, M.Kom.",
-                    Email = "staff@smartroom.ac.id",
-                    Role = UserRole.Staff,
-                    Department = "Dosen & Koordinator Lab TI",
-                    AvatarInitials = "SN",
-                    CreatedAt = DateTime.UtcNow.AddMonths(-1)
-                },
-                new()
-                {
-                    Username = "student",
-                    FullName = "Rizky Pratama",
-                    Email = "student@smartroom.ac.id",
-                    Role = UserRole.Student,
-                    Department = "Mahasiswa / Ketua BEM TI",
-                    AvatarInitials = "RP",
-                    CreatedAt = DateTime.UtcNow.AddMonths(-1)
-                }
+                Username = "admin",
+                FullName = "Dr. Hendra Wijaya, M.Sc.",
+                Email = "admin@smartroom.ac.id",
+                Role = UserRole.Admin,
+                Department = "Biro Pengelolaan Fasilitas & Aset Kampus",
+                AvatarInitials = "HW",
+                CreatedAt = DateTime.UtcNow.AddMonths(-2)
             };
-            await context.Users.AddRangeAsync(defaultUsers);
+            adminUser.PasswordHash = hasher.HashPassword(adminUser, "admin123");
+
+            var staffUser = new User
+            {
+                Username = "staff",
+                FullName = "Siti Nurhaliza, M.Kom.",
+                Email = "staff@smartroom.ac.id",
+                Role = UserRole.Staff,
+                Department = "Koordinator Laboratorium Fakultas TI",
+                AvatarInitials = "SN",
+                CreatedAt = DateTime.UtcNow.AddMonths(-2)
+            };
+            staffUser.PasswordHash = hasher.HashPassword(staffUser, "staff123");
+
+            var studentUser = new User
+            {
+                Username = "student",
+                FullName = "Rizky Pratama",
+                Email = "student@smartroom.ac.id",
+                Role = UserRole.Student,
+                Department = "Badan Eksekutif Mahasiswa (BEM) TI",
+                AvatarInitials = "RP",
+                CreatedAt = DateTime.UtcNow.AddMonths(-2)
+            };
+            studentUser.PasswordHash = hasher.HashPassword(studentUser, "student123");
+
+            await context.Users.AddRangeAsync(adminUser, staffUser, studentUser);
             await context.SaveChangesAsync();
         }
 
@@ -66,37 +72,37 @@ public static class DbSeeder
                 Name = "Ruang Sidang Utama Lt. 2",
                 Building = "Gedung Fakultas TI",
                 Capacity = 50,
-                Facilities = "Proyektor 4K, Sound System, AC, Smart TV 75 Inch, Papan Tulis Kaca",
+                Facilities = "Proyektor 4K Laser, Dual Smart TV 75 Inch, Audio Conference 8-Mic, AC Central, Podium",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow.AddDays(-10)
             },
             new()
             {
                 RoomCode = "LAB-KOMP-A",
-                Name = "Laboratorium Komputer A",
+                Name = "Laboratorium Rekayasa Perangkat Lunak",
                 Building = "Gedung Cyber Lt. 3",
                 Capacity = 40,
-                Facilities = "40 PC Workstation, AC Central, Gigabit LAN, Proyektor Laser",
+                Facilities = "40 PC Intel Core i9 32GB RAM, Gigabit Switch, AC Central, Interactive Whiteboard",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow.AddDays(-8)
             },
             new()
             {
                 RoomCode = "R-RAPAT-DEK",
-                Name = "Ruang Rapat Dekanat",
+                Name = "Executive Boardroom Dekanat",
                 Building = "Gedung Rektorat Lt. 1",
                 Capacity = 20,
-                Facilities = "Meja Konferensi Bundar, Video Conference Zoom Rooms, AC, Dispenser",
+                Facilities = "Cisco Webex Room Bar, Meja Konferensi Mahoni, Soundproofing, Smart Dimming Light",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow.AddDays(-5)
             },
             new()
             {
                 RoomCode = "AULA-MINI-01",
-                Name = "Aula Mini Serbaguna",
+                Name = "Auditorium Mini Sivitas",
                 Building = "Pusat Kegiatan Mahasiswa Lt. 1",
                 Capacity = 120,
-                Facilities = "Panggung Presentasi, Wireless Mic, Proyektor Ganda, AC Stand 5PK",
+                Facilities = "Stage Panggung, Wireless Line Array Sound, Dual Laser Projector, Lighting Truss",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow.AddDays(-3)
             }
@@ -105,14 +111,19 @@ public static class DbSeeder
         await context.Rooms.AddRangeAsync(rooms);
         await context.SaveChangesAsync();
 
+        var admin = await context.Users.FirstOrDefaultAsync(u => u.Username == "admin");
+        var staff = await context.Users.FirstOrDefaultAsync(u => u.Username == "staff");
+        var student = await context.Users.FirstOrDefaultAsync(u => u.Username == "student");
+
         var bookings = new List<Booking>
         {
             new()
             {
                 BookingReference = $"BK-{today:yyyyMMdd}-001",
                 RoomId = rooms[0].Id,
-                BorrowerName = "Dr. Ir. Budi Santoso, M.T.",
-                BorrowerEmail = "budi.santoso@university.ac.id",
+                UserId = staff?.Id,
+                BorrowerName = staff?.FullName ?? "Dr. Ir. Budi Santoso, M.T.",
+                BorrowerEmail = staff?.Email ?? "staff@smartroom.ac.id",
                 Purpose = "Sidang Terbuka Tugas Akhir & Skripsi Mahasiswa TI",
                 StartTime = today.AddHours(8).AddMinutes(30),
                 EndTime = today.AddHours(11).AddMinutes(30),
@@ -124,9 +135,10 @@ public static class DbSeeder
             {
                 BookingReference = $"BK-{today:yyyyMMdd}-002",
                 RoomId = rooms[1].Id,
-                BorrowerName = "Himpunan Mahasiswa Informatika",
-                BorrowerEmail = "hmif@students.university.ac.id",
-                Purpose = "Workshop Hands-on: Building Modern Web with .NET 8",
+                UserId = staff?.Id,
+                BorrowerName = staff?.FullName ?? "Siti Nurhaliza, M.Kom.",
+                BorrowerEmail = staff?.Email ?? "staff@smartroom.ac.id",
+                Purpose = "Workshop Hands-on: Modern Cloud Architecture & Distributed Systems",
                 StartTime = today.AddHours(13).AddMinutes(0),
                 EndTime = today.AddHours(16).AddMinutes(0),
                 Status = BookingStatus.Approved,
@@ -137,9 +149,10 @@ public static class DbSeeder
             {
                 BookingReference = $"BK-{today:yyyyMMdd}-003",
                 RoomId = rooms[2].Id,
-                BorrowerName = "Siti Rahmawati, S.Kom.",
-                BorrowerEmail = "siti.rahmawati@staff.university.ac.id",
-                Purpose = "Koordinasi Anggaran & Akreditasi Program Studi",
+                UserId = admin?.Id,
+                BorrowerName = "Dr. Hendra Wijaya, M.Sc.",
+                BorrowerEmail = "admin@smartroom.ac.id",
+                Purpose = "Rapat Koordinasi Anggaran Pengadaan Server & Jaringan",
                 StartTime = today.AddHours(10).AddMinutes(0),
                 EndTime = today.AddHours(12).AddMinutes(0),
                 Status = BookingStatus.Pending,
@@ -150,13 +163,14 @@ public static class DbSeeder
             {
                 BookingReference = $"BK-{today:yyyyMMdd}-004",
                 RoomId = rooms[3].Id,
-                BorrowerName = "Unit Kegiatan Mahasiswa Musik",
-                BorrowerEmail = "ukm.musik@students.university.ac.id",
-                Purpose = "Gladi Resik Konser Akustik Kampus",
+                UserId = student?.Id,
+                BorrowerName = student?.FullName ?? "Rizky Pratama",
+                BorrowerEmail = student?.Email ?? "student@smartroom.ac.id",
+                Purpose = "Konser Akustik & Temu Akrab Anggota BEM Baru",
                 StartTime = today.AddHours(14).AddMinutes(0),
                 EndTime = today.AddHours(17).AddMinutes(0),
                 Status = BookingStatus.Rejected,
-                AdminNotes = "Ditolak: Aula Mini sedang dalam perawatan sound system rutin.",
+                AdminNotes = "Ditolak: Ruangan dialokasikan untuk gladi bersih wisuda universitas.",
                 CreatedAt = DateTime.UtcNow.AddHours(-6)
             }
         };

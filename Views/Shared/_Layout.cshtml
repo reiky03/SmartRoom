@@ -1,380 +1,287 @@
 @using System.Security.Claims
 <!DOCTYPE html>
-<html lang="id" class="h-full">
+<html lang="id" class="h-full bg-slate-50">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] — SmartRoom</title>
-    <!-- Fonts: Plus Jakarta Sans & JetBrains Mono -->
+
+    <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS (Tailwind Play CDN with custom config) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                            900: '#064e3b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Alpine.js for lightweight reactivity -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
+
     <style>
-        :root {
-            --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            --font-mono: 'JetBrains Mono', monospace;
-            --bg-canvas: #fafafa;
-            --bg-surface: #ffffff;
-            --border-subtle: #e5e7eb;
-            --border-hover: #d1d5db;
-            --text-main: #111827;
-            --text-secondary: #4b5563;
-            --text-muted: #6b7280;
-            --primary: #0f172a;
-            --primary-hover: #1e293b;
-        }
-
-        body {
-            font-family: var(--font-sans);
-            background-color: var(--bg-canvas);
-            color: var(--text-main);
-            letter-spacing: -0.015em;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .font-mono {
-            font-family: var(--font-mono);
-            letter-spacing: -0.02em;
-        }
-
-        /* Minimal Header */
-        .app-navbar {
-            background-color: #ffffff;
-            border-bottom: 1px solid var(--border-subtle);
-            padding: 0.75rem 1.5rem;
-            position: sticky;
-            top: 0;
-            z-index: 1030;
-        }
-
-        .nav-link-minimal {
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: var(--text-secondary);
-            padding: 0.45rem 0.85rem;
-            border-radius: 0.5rem;
-            text-decoration: none;
-            transition: all 0.15s ease-in-out;
-        }
-        .nav-link-minimal:hover {
-            color: var(--text-main);
-            background-color: #f3f4f6;
-        }
-        .nav-link-minimal.active {
-            color: var(--text-main);
-            background-color: #f3f4f6;
-            font-weight: 600;
-        }
-
-        /* Buttons & Actions */
-        .btn-minimal-primary {
-            background-color: var(--primary);
-            color: #ffffff;
-            border: 1px solid var(--primary);
-            font-size: 0.84rem;
-            font-weight: 500;
-            padding: 0.45rem 1rem;
-            border-radius: 0.5rem;
-            transition: all 0.15s ease;
-        }
-        .btn-minimal-primary:hover {
-            background-color: var(--primary-hover);
-            color: #ffffff;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.06);
-        }
-
-        .btn-minimal-secondary {
-            background-color: #ffffff;
-            color: var(--text-main);
-            border: 1px solid var(--border-subtle);
-            font-size: 0.84rem;
-            font-weight: 500;
-            padding: 0.45rem 0.9rem;
-            border-radius: 0.5rem;
-            transition: all 0.15s ease;
-        }
-        .btn-minimal-secondary:hover {
-            background-color: #f9fafb;
-            border-color: var(--border-hover);
-            color: var(--text-main);
-        }
-
-        /* Cards & Bento Grid */
-        .card-minimal {
-            background-color: var(--bg-surface);
-            border: 1px solid var(--border-subtle);
-            border-radius: 0.75rem;
-            transition: border-color 0.15s ease, box-shadow 0.15s ease;
-        }
-        .card-minimal:hover {
-            border-color: #d1d5db;
-        }
-
-        /* Semantic Soft Badges */
-        .badge-pill-soft {
-            font-size: 0.75rem;
-            font-weight: 600;
-            padding: 0.25rem 0.65rem;
-            border-radius: 9999px;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.35rem;
-        }
-        .badge-soft-pending {
-            background-color: #fffbeb;
-            color: #92400e;
-            border: 1px solid #fde68a;
-        }
-        .badge-soft-approved {
-            background-color: #ecfdf5;
-            color: #065f46;
-            border: 1px solid #a7f3d0;
-        }
-        .badge-soft-rejected {
-            background-color: #fff1f2;
-            color: #9f1239;
-            border: 1px solid #fecdd3;
-        }
-        .badge-soft-cancelled {
-            background-color: #f3f4f6;
-            color: #4b5563;
-            border: 1px solid #e5e7eb;
-        }
-
-        /* Role Badges */
-        .badge-role-admin {
-            background-color: #f5f3ff;
-            color: #5b21b6;
-            border: 1px solid #ddd6fe;
-        }
-        .badge-role-staff {
-            background-color: #eff6ff;
-            color: #1e40af;
-            border: 1px solid #bfdbfe;
-        }
-        .badge-role-student {
-            background-color: #f0fdf4;
-            color: #166534;
-            border: 1px solid #bbf7d0;
-        }
-
-        /* Sleek Tables */
-        .table-minimal {
-            border-collapse: separate;
-            border-spacing: 0;
-            width: 100%;
-        }
-        .table-minimal th {
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--text-muted);
-            background-color: #f9fafb;
-            border-bottom: 1px solid var(--border-subtle);
-            padding: 0.75rem 1rem;
-        }
-        .table-minimal td {
-            font-size: 0.85rem;
-            padding: 0.85rem 1rem;
-            border-bottom: 1px solid var(--border-subtle);
-            vertical-align: middle;
-            color: var(--text-main);
-        }
-        .table-minimal tr:last-child td {
-            border-bottom: none;
-        }
-        .table-minimal tbody tr:hover td {
-            background-color: #f9fafb;
-        }
-
-        .avatar-circle {
-            width: 32px;
-            height: 32px;
-            border-radius: 9999px;
-            background-color: #111827;
-            color: #ffffff;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.75rem;
-            font-weight: 600;
-            letter-spacing: 0;
-        }
+        [x-cloak] { display: none !important; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; letter-spacing: -0.012em; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
     </style>
 </head>
-<body>
-    <!-- Top Navigation -->
-    <header class="app-navbar">
-        <div class="container-fluid max-w-7xl d-flex align-items-center justify-content-between">
-            <!-- Brand & Main Nav Links -->
-            <div class="d-flex align-items-center gap-4">
-                <a class="d-flex align-items-center gap-2 text-decoration-none text-dark" asp-controller="Home" asp-action="Index">
-                    <span class="d-inline-flex align-items-center justify-content-center bg-dark text-white rounded-2" style="width: 28px; height: 28px;">
-                        <i class="bi bi-intersect fs-6"></i>
-                    </span>
-                    <span class="fw-bold tracking-tight fs-6">SmartRoom</span>
-                </a>
+<body class="h-full antialiased text-slate-800 flex" x-data="{ sidebarOpen: false, profileDropdown: false }">
 
-                <nav class="d-none d-md-flex align-items-center gap-1">
-                    <a class="nav-link-minimal @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Home" ? "active" : "")" 
-                       asp-controller="Home" asp-action="Index">
-                        Dashboard
-                    </a>
-                    <a class="nav-link-minimal @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Rooms" ? "active" : "")" 
-                       asp-controller="Rooms" asp-action="Index">
-                        Ruangan
-                    </a>
-                    <a class="nav-link-minimal @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Bookings" && ViewContext.RouteData.Values["Action"]?.ToString() != "Manage" ? "active" : "")" 
-                       asp-controller="Bookings" asp-action="Index">
-                        Jadwal Peminjaman
-                    </a>
-                    @if (User.IsInRole("Admin"))
-                    {
-                        <a class="nav-link-minimal @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Bookings" && ViewContext.RouteData.Values["Action"]?.ToString() == "Manage" ? "active" : "")" 
-                           asp-controller="Bookings" asp-action="Manage">
-                            Approval Admin
-                            <span class="badge bg-dark text-white rounded-pill px-1.5 ms-1 font-mono" style="font-size: 0.65rem;">ADMIN</span>
-                        </a>
-                    }
-                </nav>
+    <!-- Mobile Sidebar Backdrop -->
+    <div x-show="sidebarOpen" x-cloak 
+         class="fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-sm lg:hidden transition-opacity"
+         x-on:click="sidebarOpen = false"></div>
+
+    <!-- Sidebar Navigation -->
+    <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" 
+           class="fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-slate-300 flex flex-col transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:inset-auto lg:flex-shrink-0">
+        
+        <!-- App Brand -->
+        <div class="h-16 flex items-center justify-between px-6 border-b border-slate-800">
+            <a asp-controller="Home" asp-action="Index" class="flex items-center gap-2.5 text-white no-underline">
+                <div class="w-8 h-8 rounded-lg bg-emerald-500 text-slate-950 flex items-center justify-center font-bold shadow-md shadow-emerald-500/20">
+                    <i data-lucide="building-2" class="w-4 h-4 text-white"></i>
+                </div>
+                <div class="flex flex-col">
+                    <span class="font-bold text-base tracking-tight text-white leading-none">SmartRoom</span>
+                    <span class="text-[10px] text-emerald-400 font-mono tracking-wider mt-1 uppercase">Campus Booking</span>
+                </div>
+            </a>
+            <button x-on:click="sidebarOpen = false" class="lg:hidden text-slate-400 hover:text-white p-1 rounded">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <!-- Navigation Links -->
+        <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+            <div class="px-3 pb-2 text-[11px] font-semibold text-slate-400 uppercase tracking-wider font-mono">
+                Menu Utama
             </div>
 
-            <!-- Actions, Swagger & RBAC Persona Switcher -->
-            <div class="d-flex align-items-center gap-2">
-                <a href="/swagger" target="_blank" class="btn btn-minimal-secondary d-none d-sm-inline-flex align-items-center gap-1.5" title="Buka Dokumentasi Swagger REST API">
-                    <i class="bi bi-braces fs-6"></i>
-                    <span class="font-mono" style="font-size: 0.8rem;">/api</span>
+            <a asp-controller="Home" asp-action="Index" 
+               class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Home" ? "bg-slate-800 text-white shadow-sm border border-slate-700/60 font-semibold" : "text-slate-400 hover:bg-slate-800/60 hover:text-white")">
+                <i data-lucide="layout-dashboard" class="w-4 h-4 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Home" ? "text-emerald-400" : "")"></i>
+                <span>Dashboard</span>
+            </a>
+
+            <a asp-controller="Rooms" asp-action="Index" 
+               class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Rooms" ? "bg-slate-800 text-white shadow-sm border border-slate-700/60 font-semibold" : "text-slate-400 hover:bg-slate-800/60 hover:text-white")">
+                <i data-lucide="door-open" class="w-4 h-4 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Rooms" ? "text-emerald-400" : "")"></i>
+                <span>Katalog Ruangan</span>
+            </a>
+
+            <a asp-controller="Bookings" asp-action="Index" 
+               class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Bookings" && ViewContext.RouteData.Values["Action"]?.ToString() != "Manage" ? "bg-slate-800 text-white shadow-sm border border-slate-700/60 font-semibold" : "text-slate-400 hover:bg-slate-800/60 hover:text-white")">
+                <i data-lucide="calendar" class="w-4 h-4 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Bookings" && ViewContext.RouteData.Values["Action"]?.ToString() != "Manage" ? "text-emerald-400" : "")"></i>
+                <span>Jadwal Peminjaman</span>
+            </a>
+
+            @if (User.IsInRole("Admin"))
+            {
+                <div class="pt-5 px-3 pb-2 text-[11px] font-semibold text-slate-400 uppercase tracking-wider font-mono flex items-center justify-between">
+                    <span>Manajemen Admin</span>
+                    <span class="px-1.5 py-0.5 rounded text-[9px] bg-rose-500/20 text-rose-300 border border-rose-500/30">RBAC</span>
+                </div>
+
+                <a asp-controller="Bookings" asp-action="Manage" 
+                   class="flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Bookings" && ViewContext.RouteData.Values["Action"]?.ToString() == "Manage" ? "bg-slate-800 text-white shadow-sm border border-slate-700/60 font-semibold" : "text-slate-400 hover:bg-slate-800/60 hover:text-white")">
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="shield-check" class="w-4 h-4 text-rose-400"></i>
+                        <span>Approval Antrean</span>
+                    </div>
+                    <span class="px-1.5 py-0.5 text-xs font-mono font-semibold bg-amber-400/20 text-amber-300 rounded border border-amber-400/30">Admin</span>
                 </a>
 
-                <a asp-controller="Bookings" asp-action="Create" class="btn btn-minimal-primary d-inline-flex align-items-center gap-1.5">
-                    <i class="bi bi-plus-lg"></i>
+                <a asp-controller="Rooms" asp-action="Create" 
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-slate-400 hover:bg-slate-800/60 hover:text-white">
+                    <i data-lucide="plus-circle" class="w-4 h-4 text-slate-400"></i>
+                    <span>Tambah Ruangan</span>
+                </a>
+            }
+
+            <div class="pt-5 px-3 pb-2 text-[11px] font-semibold text-slate-400 uppercase tracking-wider font-mono">
+                Developer &amp; API
+            </div>
+
+            <a href="/swagger" target="_blank" 
+               class="flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-slate-400 hover:bg-slate-800/60 hover:text-white">
+                <div class="flex items-center gap-3">
+                    <i data-lucide="code-2" class="w-4 h-4 text-sky-400"></i>
+                    <span>Swagger OpenAPI</span>
+                </div>
+                <i data-lucide="external-link" class="w-3.5 h-3.5 text-slate-500"></i>
+            </a>
+        </nav>
+
+        <!-- Current User Profile Footer in Sidebar -->
+        <div class="p-3 border-t border-slate-800 bg-slate-950/40">
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                var role = User.FindFirstValue(ClaimTypes.Role) ?? "Student";
+                var initials = User.FindFirst("AvatarInitials")?.Value ?? "SR";
+                var dept = User.FindFirst("Department")?.Value ?? "Civitas";
+
+                <div class="flex items-center justify-between p-2 rounded-lg bg-slate-900 border border-slate-800">
+                    <div class="flex items-center gap-2.5 overflow-hidden">
+                        <div class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold text-xs font-mono flex-shrink-0">
+                            @initials
+                        </div>
+                        <div class="truncate">
+                            <div class="text-xs font-semibold text-white truncate">@User.Identity.Name</div>
+                            <div class="text-[11px] text-slate-400 truncate">@dept</div>
+                        </div>
+                    </div>
+                    <form asp-controller="Account" asp-action="Logout" method="post" class="m-0 flex-shrink-0">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="p-1.5 text-slate-400 hover:text-rose-400 rounded hover:bg-slate-800 transition-colors" title="Keluar / Logout">
+                            <i data-lucide="log-out" class="w-4 h-4"></i>
+                        </button>
+                    </form>
+                </div>
+            }
+            else
+            {
+                <a asp-controller="Account" asp-action="Login" class="flex items-center justify-center gap-2 w-full py-2 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition-colors shadow">
+                    <i data-lucide="log-in" class="w-4 h-4"></i>
+                    <span>Masuk ke Akun</span>
+                </a>
+            }
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+        <!-- Top Navbar -->
+        <header class="h-16 bg-white border-b border-slate-200/80 sticky top-0 z-30 px-4 lg:px-8 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <button x-on:click="sidebarOpen = true" class="lg:hidden p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg">
+                    <i data-lucide="menu" class="w-5 h-5"></i>
+                </button>
+                <div class="hidden sm:flex items-center gap-2 text-xs text-slate-400 font-mono">
+                    <span>SISTEM INFORMASI PEMINJAMAN RUANGAN</span>
+                    <span>/</span>
+                    <span class="text-slate-700 font-semibold">@ViewData["Title"]</span>
+                </div>
+            </div>
+
+            <!-- Right Actions -->
+            <div class="flex items-center gap-3">
+                <a asp-controller="Bookings" asp-action="Create" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold shadow-sm transition-all">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
                     <span>Pinjam Ruangan</span>
                 </a>
 
-                <!-- RBAC Interactive Persona Dropdown -->
-                <div class="dropdown">
-                    <button class="btn btn-minimal-secondary d-flex align-items-center gap-2 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        @if (User.Identity?.IsAuthenticated == true)
-                        {
-                            var role = User.FindFirstValue(ClaimTypes.Role) ?? "Student";
-                            var initials = User.FindFirst("AvatarInitials")?.Value ?? "SR";
-                            <span class="avatar-circle">@initials</span>
-                            <div class="text-start d-none d-lg-block" style="line-height: 1.2;">
-                                <div class="fw-semibold text-truncate" style="max-width: 140px; font-size: 0.82rem;">@User.Identity.Name</div>
-                                <span class="badge-pill-soft @(role == "Admin" ? "badge-role-admin" : (role == "Staff" ? "badge-role-staff" : "badge-role-student"))" style="font-size: 0.65rem; padding: 0.1rem 0.4rem;">
-                                    @role
-                                </span>
-                            </div>
-                        }
-                        else
-                        {
-                            <i class="bi bi-person-circle fs-5"></i>
-                            <span class="small fw-semibold d-none d-sm-inline">Pilih Peran</span>
-                        }
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border p-2 rounded-3" style="min-width: 270px;">
-                        <li class="px-2 py-1 mb-1 border-bottom">
-                            <span class="text-uppercase text-muted fw-bold font-mono" style="font-size: 0.68rem;">RBAC Persona Switcher (1-Klik)</span>
-                            <p class="text-muted small mb-1" style="font-size: 0.75rem;">Uji hak akses peran secara instan:</p>
-                        </li>
-                        <li>
-                            <a class="dropdown-item rounded-2 py-2 d-flex align-items-center justify-content-between @(User.IsInRole("Admin") ? "bg-light fw-bold" : "")" 
-                               asp-controller="Account" asp-action="SwitchRole" asp-route-role="Admin" asp-route-returnUrl="@Context.Request.Path">
-                                <div>
-                                    <div class="fw-semibold" style="font-size: 0.82rem;">Administrator</div>
-                                    <small class="text-muted d-block" style="font-size: 0.72rem;">Full akses: Approve, Reject, CRUD Ruang</small>
-                                </div>
-                                @if (User.IsInRole("Admin")) { <i class="bi bi-check-lg text-primary"></i> }
-                            </a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item rounded-2 py-2 d-flex align-items-center justify-content-between @(User.IsInRole("Staff") ? "bg-light fw-bold" : "")" 
-                               asp-controller="Account" asp-action="SwitchRole" asp-route-role="Staff" asp-route-returnUrl="@Context.Request.Path">
-                                <div>
-                                    <div class="fw-semibold" style="font-size: 0.82rem;">Staff / Dosen</div>
-                                    <small class="text-muted d-block" style="font-size: 0.72rem;">Booking instan & monitoring ruangan</small>
-                                </div>
-                                @if (User.IsInRole("Staff")) { <i class="bi bi-check-lg text-primary"></i> }
-                            </a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item rounded-2 py-2 d-flex align-items-center justify-content-between @(User.IsInRole("Student") ? "bg-light fw-bold" : "")" 
-                               asp-controller="Account" asp-action="SwitchRole" asp-route-role="Student" asp-route-returnUrl="@Context.Request.Path">
-                                <div>
-                                    <div class="fw-semibold" style="font-size: 0.82rem;">Mahasiswa / Umum</div>
-                                    <small class="text-muted d-block" style="font-size: 0.72rem;">Pengajuan peminjaman & cek jadwal</small>
-                                </div>
-                                @if (User.IsInRole("Student")) { <i class="bi bi-check-lg text-primary"></i> }
-                            </a>
-                        </li>
-                        @if (User.Identity?.IsAuthenticated == true)
-                        {
-                            <li class="border-top mt-2 pt-2">
-                                <a class="dropdown-item rounded-2 text-danger small py-1.5" asp-controller="Account" asp-action="Logout">
-                                    <i class="bi bi-box-arrow-right me-1"></i> Keluar (Logout)
-                                </a>
-                            </li>
-                        }
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </header>
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    var role = User.FindFirstValue(ClaimTypes.Role) ?? "Student";
+                    var roleColor = role == "Admin" ? "bg-rose-50 text-rose-700 border-rose-200" : (role == "Staff" ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-emerald-50 text-emerald-700 border-emerald-200");
 
-    <!-- Main Workspace -->
-    <main class="flex-grow-1 py-4">
-        <div class="container-fluid max-w-7xl px-3 px-md-4">
-            <!-- Flash Message -->
+                    <div class="relative" x-data="{ open: false }">
+                        <button x-on:click="open = !open" class="flex items-center gap-2.5 p-1.5 rounded-lg hover:bg-slate-100 transition-colors">
+                            <span class="px-2 py-0.5 rounded text-[11px] font-mono font-semibold border @roleColor">
+                                @role
+                            </span>
+                            <span class="text-xs font-medium text-slate-700 hidden md:inline">@User.Identity.Name</span>
+                            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400"></i>
+                        </button>
+
+                        <div x-show="open" x-on:click.outside="open = false" x-cloak
+                             class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-slate-200/80 py-1.5 text-xs text-slate-700 z-50">
+                            <div class="px-3 py-2 border-b border-slate-100">
+                                <div class="font-semibold text-slate-900">@User.Identity.Name</div>
+                                <div class="text-[11px] text-slate-500 font-mono truncate">@User.FindFirstValue(ClaimTypes.Email)</div>
+                            </div>
+                            <div class="px-3 py-1.5 text-[10px] uppercase font-mono text-slate-400 font-semibold tracking-wider">
+                                Role Akses: @role
+                            </div>
+                            <form asp-controller="Account" asp-action="Logout" method="post" class="m-0">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="w-full text-left px-3 py-2 text-rose-600 hover:bg-rose-50 flex items-center gap-2 transition-colors">
+                                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                                    <span>Keluar (Logout)</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <a asp-controller="Account" asp-action="Login" class="text-xs font-semibold px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 border border-slate-200">
+                        Masuk
+                    </a>
+                }
+            </div>
+        </header>
+
+        <!-- Main Workspace Body -->
+        <main class="flex-1 p-4 lg:p-8 max-w-7xl w-full mx-auto">
+            <!-- Toast / Flash Messages -->
             @if (TempData["SuccessMessage"] != null)
             {
-                <div class="alert alert-dismissible fade show card-minimal p-3 mb-4 d-flex align-items-center gap-2" role="alert" style="background-color: #f0fdf4; border-color: #bbf7d0;">
-                    <i class="bi bi-check2-circle text-success fs-5"></i>
-                    <div class="small fw-medium text-success-emphasis">@TempData["SuccessMessage"]</div>
-                    <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+                <div class="mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-start gap-3 shadow-sm">
+                    <i data-lucide="check-circle" class="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5"></i>
+                    <div class="flex-1 text-sm font-medium">@TempData["SuccessMessage"]</div>
                 </div>
             }
 
             @if (TempData["ErrorMessage"] != null)
             {
-                <div class="alert alert-dismissible fade show card-minimal p-3 mb-4 d-flex align-items-center gap-2" role="alert" style="background-color: #fff1f2; border-color: #fecdd3;">
-                    <i class="bi bi-exclamation-octagon text-danger fs-5"></i>
-                    <div class="small fw-medium text-danger-emphasis">@TempData["ErrorMessage"]</div>
-                    <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+                <div class="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 flex items-start gap-3 shadow-sm">
+                    <i data-lucide="alert-octagon" class="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5"></i>
+                    <div class="flex-1 text-sm font-medium">@TempData["ErrorMessage"]</div>
                 </div>
             }
 
             @RenderBody()
-        </div>
-    </main>
+        </main>
 
-    <!-- Minimal Footer -->
-    <footer class="py-3 border-top bg-white">
-        <div class="container-fluid max-w-7xl px-3 px-md-4 d-flex flex-column flex-sm-row align-items-center justify-content-between gap-2 small text-muted">
-            <div class="d-flex align-items-center gap-2">
-                <span class="fw-semibold text-dark">SmartRoom</span>
+        <!-- Modern Clean Footer -->
+        <footer class="mt-auto py-4 px-4 lg:px-8 bg-white border-t border-slate-200 text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+                <span class="font-bold text-slate-800">SmartRoom</span>
                 <span>&bull;</span>
-                <span>ASP.NET Core 8 &bull; EF Core &bull; PostgreSQL / SQLite</span>
+                <span>ASP.NET Core 8 &bull; EF Core 8 &bull; Enterprise RBAC</span>
             </div>
-            <div class="d-flex align-items-center gap-3 font-mono" style="font-size: 0.78rem;">
-                <a href="/swagger" class="text-decoration-none text-muted hover-dark"><i class="bi bi-filetype-json me-1"></i>OpenAPI 3.0</a>
+            <div class="flex items-center gap-4 font-mono text-[11px]">
+                <a href="/swagger" target="_blank" class="hover:text-slate-900 transition-colors">REST API Docs</a>
                 <span>&bull;</span>
-                <span class="badge badge-pill-soft bg-light text-dark border">RBAC Active</span>
+                <span class="text-emerald-600 font-semibold">PostgreSQL / SQLite Ready</span>
             </div>
-        </div>
-    </footer>
+        </footer>
+    </div>
 
-    <!-- Bootstrap 5 Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Initialize Lucide Icons -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (window.lucide) {
+                window.lucide.createIcons();
+            }
+        });
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
