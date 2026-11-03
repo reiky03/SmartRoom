@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { currentUser, isAuthenticated, isAdmin, isStudent, logout, quickLoginAs } from '../stores/auth';
+import { currentUser, isAuthenticated, isAdmin, isStudent, logout, quickLoginAs, refreshCurrentUserProfile } from '../stores/auth';
 import { api } from '../api/client';
 import { BookingStatus } from '../types';
 import {
@@ -28,6 +28,7 @@ const pendingApprovalCount = ref(0);
 const studentBookingsCount = ref(0);
 
 onMounted(async () => {
+  await refreshCurrentUserProfile();
   await loadCounts();
   window.addEventListener('booking-created', loadCounts);
 });
@@ -66,12 +67,13 @@ function confirmLogout() {
   router.push('/login');
 }
 
-function handleSwitchRole(role: 'Admin' | 'Staff' | 'Student') {
+async function handleSwitchRole(role: 'Admin' | 'Staff' | 'Student') {
   quickLoginAs(role);
   profileDropdownOpen.value = false;
   mobileOpen.value = false;
   router.push(role === 'Admin' ? '/admin/dashboard' : '/student/dashboard');
   loadCounts();
+  await refreshCurrentUserProfile();
 }
 
 function handleStudentNav(target: 'catalog' | 'bookings') {

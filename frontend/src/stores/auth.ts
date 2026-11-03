@@ -15,7 +15,7 @@ export const PRESET_USERS: Record<'Admin' | 'Staff' | 'Student', UserProfile & {
     fullName: 'Rizky Pratama',
     email: 'student@smartroom.ac.id',
     role: 'Student',
-    department: 'Teknik Informatika (Mahasiswa)',
+    department: 'Badan Eksekutif Mahasiswa (BEM) TI',
     avatarInitials: 'RP',
   },
   Admin: {
@@ -24,7 +24,7 @@ export const PRESET_USERS: Record<'Admin' | 'Staff' | 'Student', UserProfile & {
     fullName: 'Dr. Hendra Wijaya, M.Sc.',
     email: 'admin@smartroom.ac.id',
     role: 'Admin',
-    department: 'Biro Sarana & Fasilitas Kampus',
+    department: 'Biro Pengelolaan Fasilitas & Aset Kampus',
     avatarInitials: 'HW',
   },
   Staff: {
@@ -33,7 +33,7 @@ export const PRESET_USERS: Record<'Admin' | 'Staff' | 'Student', UserProfile & {
     fullName: 'Siti Nurhaliza, M.Kom.',
     email: 'staff@smartroom.ac.id',
     role: 'Staff',
-    department: 'Laboratorium Rekayasa Perangkat Lunak',
+    department: 'Koordinator Laboratorium Fakultas TI',
     avatarInitials: 'SN',
   },
 };
@@ -44,12 +44,47 @@ let initialUser: UserProfile | null = null;
 if (savedUserJson) {
   try {
     initialUser = JSON.parse(savedUserJson);
+    if (initialUser) {
+      // Auto-synchronize legacy cached departments with official database values
+      if (initialUser.username === 'student' && initialUser.department !== PRESET_USERS.Student.department) {
+        initialUser.department = PRESET_USERS.Student.department;
+        localStorage.setItem('smartroom_user_session', JSON.stringify(initialUser));
+      } else if (initialUser.username === 'admin' && initialUser.department !== PRESET_USERS.Admin.department) {
+        initialUser.department = PRESET_USERS.Admin.department;
+        localStorage.setItem('smartroom_user_session', JSON.stringify(initialUser));
+      } else if (initialUser.username === 'staff' && initialUser.department !== PRESET_USERS.Staff.department) {
+        initialUser.department = PRESET_USERS.Staff.department;
+        localStorage.setItem('smartroom_user_session', JSON.stringify(initialUser));
+      }
+    }
   } catch {
     initialUser = null;
   }
 }
 
 export const currentUser = ref<UserProfile | null>(initialUser);
+
+export async function refreshCurrentUserProfile() {
+  if (!currentUser.value?.username) return;
+  try {
+    const users = await api.getUsers();
+    const found = users.find(u => u.username.toLowerCase() === currentUser.value?.username.toLowerCase());
+    if (found) {
+      const updated: UserProfile = {
+        username: found.username,
+        fullName: found.fullName,
+        email: found.email,
+        role: found.role as 'Admin' | 'Staff' | 'Student',
+        department: found.department,
+        avatarInitials: found.avatarInitials,
+      };
+      currentUser.value = updated;
+      localStorage.setItem('smartroom_user_session', JSON.stringify(updated));
+    }
+  } catch {
+    // Graceful offline fallback
+  }
+}
 export const isAuthenticated = computed(() => currentUser.value !== null);
 export const isAdmin = computed(() => currentUser.value?.role === 'Admin');
 export const isStudent = computed(() => currentUser.value?.role === 'Student');

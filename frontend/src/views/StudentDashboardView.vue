@@ -231,7 +231,7 @@ function printPass() {
         <div class="lg:col-span-8 space-y-3.5">
           <div class="page-kicker">
             <span>Portal civitas</span>
-            <span class="text-[#596159] font-medium">{{ currentUser?.department || 'Teknik Informatika' }}</span>
+            <span class="text-[#596159] font-medium">{{ currentUser?.department || 'Badan Eksekutif Mahasiswa (BEM) TI' }}</span>
           </div>
           <h1 class="max-w-[16ch] text-4xl font-medium leading-[0.98] text-[#182019] sm:text-5xl lg:text-6xl">
             Ruang untuk agenda berikutnya
