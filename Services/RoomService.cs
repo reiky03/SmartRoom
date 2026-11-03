@@ -73,6 +73,7 @@ public class RoomService : IRoomService
         existing.Building = room.Building.Trim();
         existing.Capacity = room.Capacity;
         existing.Facilities = room.Facilities?.Trim();
+        existing.ImageUrl = room.ImageUrl?.Trim();
         existing.IsActive = room.IsActive;
 
         await _context.SaveChangesAsync();

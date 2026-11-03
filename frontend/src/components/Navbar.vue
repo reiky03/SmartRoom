@@ -177,6 +177,15 @@ function handleStudentNav(target: 'catalog' | 'bookings') {
               >
                 Riwayat
               </router-link>
+              <router-link
+                id="nav-admin-users-btn"
+                to="/admin/users"
+                class="flex min-h-11 items-center rounded-xl px-4 text-sm font-semibold transition-colors"
+                active-class="bg-[#E4EEE8] text-[#214C38]"
+                :class="route.path !== '/admin/users' ? 'text-[#5F675F] hover:bg-[#F1EFE9] hover:text-[#182019]' : ''"
+              >
+                Pengguna
+              </router-link>
             </template>
           </nav>
         </div>
@@ -308,6 +317,7 @@ function handleStudentNav(target: 'catalog' | 'bookings') {
             </router-link>
             <router-link to="/admin/rooms" @click="mobileOpen = false" class="flex min-h-11 items-center rounded-xl px-4 text-sm font-semibold text-[#182019] hover:bg-[#F1EFE9]">Ruangan</router-link>
             <router-link to="/admin/bookings" @click="mobileOpen = false" class="flex min-h-11 items-center rounded-xl px-4 text-sm font-semibold text-[#182019] hover:bg-[#F1EFE9]">Riwayat</router-link>
+            <router-link to="/admin/users" @click="mobileOpen = false" class="flex min-h-11 items-center rounded-xl px-4 text-sm font-semibold text-[#182019] hover:bg-[#F1EFE9]">Pengguna</router-link>
           </template>
         </nav>
       </transition>

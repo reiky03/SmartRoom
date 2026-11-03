@@ -35,6 +35,10 @@ public class Room
     [Display(Name = "Fasilitas")]
     public string? Facilities { get; set; }
 
+    [StringLength(500, ErrorMessage = "URL gambar maksimal 500 karakter")]
+    [Display(Name = "URL Gambar")]
+    public string? ImageUrl { get; set; }
+
     [Display(Name = "Status Aktif")]
     public bool IsActive { get; set; } = true;
 

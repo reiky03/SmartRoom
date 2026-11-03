@@ -1,4 +1,13 @@
-import type { Room, Booking, CreateBookingDto, RoomAvailabilityResponse, BookingStatus } from '../types';
+import type {
+  Room,
+  Booking,
+  CreateBookingDto,
+  RoomAvailabilityResponse,
+  BookingStatus,
+  UserAccount,
+  CreateUserPayload,
+  UpdateUserPayload,
+} from '../types';
 
 const API_BASE = '/api';
 
@@ -43,6 +52,37 @@ export const api = {
     fetchApi<Room>(`/rooms/${id}`, { method: 'PUT', body: JSON.stringify(room) }),
   toggleRoomStatus: (id: number) => 
     fetchApi<{ message: string }>(`/rooms/${id}/toggle`, { method: 'PATCH' }),
+  deleteRoom: (id: number) => 
+    fetchApi<{ message: string }>(`/rooms/${id}`, { method: 'DELETE' }),
+  uploadRoomImage: async (file: File): Promise<{ imageUrl: string }> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await fetch('/api/rooms/upload-image', {
+      method: 'POST',
+      body: formData,
+    });
+    if (!response.ok) {
+      let errorMsg = 'Gagal mengunggah gambar';
+      try {
+        const errJson = await response.json();
+        errorMsg = errJson.message || errorMsg;
+      } catch {}
+      throw new Error(errorMsg);
+    }
+    return response.json();
+  },
+
+  // Users & Civitas Management
+  getUsers: () => fetchApi<UserAccount[]>('/users'),
+  getUserById: (id: number) => fetchApi<UserAccount>(`/users/${id}`),
+  createUser: (payload: CreateUserPayload) => 
+    fetchApi<UserAccount>('/users', { method: 'POST', body: JSON.stringify(payload) }),
+  updateUser: (id: number, payload: UpdateUserPayload) => 
+    fetchApi<UserAccount>(`/users/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
+  deleteUser: (id: number) => 
+    fetchApi<{ message: string }>(`/users/${id}`, { method: 'DELETE' }),
+  loginApi: (username: string, password: string) => 
+    fetchApi<UserAccount>('/users/login', { method: 'POST', body: JSON.stringify({ username, password }) }),
 
   // Bookings
   getBookings: (params?: { roomId?: number; status?: BookingStatus; date?: string; borrowerEmail?: string }) => {

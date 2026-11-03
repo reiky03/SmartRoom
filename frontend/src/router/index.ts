@@ -7,6 +7,7 @@ import AdminDashboardView from '../views/AdminDashboardView.vue';
 import AdminApprovalsView from '../views/AdminApprovalsView.vue';
 import AdminRoomsView from '../views/AdminRoomsView.vue';
 import AdminAllBookingsView from '../views/AdminAllBookingsView.vue';
+import AdminUsersView from '../views/AdminUsersView.vue';
 
 const routes: RouteRecordRaw[] = [
   {
@@ -43,6 +44,12 @@ const routes: RouteRecordRaw[] = [
     path: '/admin/bookings',
     name: 'AdminBookings',
     component: AdminAllBookingsView,
+    meta: { requiresAuth: true, role: 'Admin' }
+  },
+  {
+    path: '/admin/users',
+    name: 'AdminUsers',
+    component: AdminUsersView,
     meta: { requiresAuth: true, role: 'Admin' }
   },
   {

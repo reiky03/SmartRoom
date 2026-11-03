@@ -14,7 +14,10 @@ import {
   X,
   Search,
   CheckCircle2,
-  AlertTriangle
+  AlertTriangle,
+  Trash2,
+  Upload,
+  Image as ImageIcon
 } from 'lucide-vue-next';
 
 const rooms = ref<Room[]>([]);
@@ -33,12 +36,20 @@ const confirmToggleRoom = ref<Room | null>(null);
 const isConfirmToggleOpen = ref(false);
 const toggleLoading = ref(false);
 
+// Confirmation delete state
+const confirmDeleteRoom = ref<Room | null>(null);
+const isConfirmDeleteOpen = ref(false);
+const deleteLoading = ref(false);
+
 const formRoomCode = ref('');
 const formName = ref('');
 const formBuilding = ref('');
 const formCapacity = ref(40);
 const formFacilities = ref('');
+const formImageUrl = ref('');
 const formIsActive = ref(true);
+const isUploadingImage = ref(false);
+const fileInputRef = ref<HTMLInputElement | null>(null);
 
 const roomImages: Record<number, string> = {
   1: 'https://images.unsplash.com/photo-1517502884422-41eaead166d4?auto=format&fit=crop&w=800&q=80',
@@ -95,6 +106,7 @@ function openCreateModal() {
   formBuilding.value = '';
   formCapacity.value = 40;
   formFacilities.value = 'AC, Proyektor, Sound System';
+  formImageUrl.value = '';
   formIsActive.value = true;
   isModalOpen.value = true;
 }
@@ -107,8 +119,52 @@ function openEditModal(room: Room) {
   formBuilding.value = room.building;
   formCapacity.value = room.capacity;
   formFacilities.value = room.facilities || '';
+  formImageUrl.value = room.imageUrl || '';
   formIsActive.value = room.isActive;
   isModalOpen.value = true;
+}
+
+function triggerFileInput() {
+  fileInputRef.value?.click();
+}
+
+async function handleFileSelected(event: Event) {
+  const target = event.target as HTMLInputElement;
+  if (!target.files || target.files.length === 0) return;
+  const file = target.files[0];
+  isUploadingImage.value = true;
+  try {
+    const res = await api.uploadRoomImage(file);
+    formImageUrl.value = res.imageUrl;
+    addToast('Foto ruangan berhasil diunggah!', 'success');
+  } catch (e: any) {
+    addToast('Gagal mengunggah foto: ' + e.message, 'error');
+  } finally {
+    isUploadingImage.value = false;
+    target.value = '';
+  }
+}
+
+function promptDeleteRoom(room: Room) {
+  confirmDeleteRoom.value = room;
+  isConfirmDeleteOpen.value = true;
+}
+
+async function executeDeleteRoom() {
+  if (!confirmDeleteRoom.value) return;
+  const room = confirmDeleteRoom.value;
+  deleteLoading.value = true;
+  try {
+    await api.deleteRoom(room.id);
+    addToast(`Ruangan ${room.roomCode} (${room.name}) berhasil dihapus permanen.`, 'success');
+    isConfirmDeleteOpen.value = false;
+    confirmDeleteRoom.value = null;
+    await loadRooms();
+  } catch (e: any) {
+    addToast('Gagal menghapus ruangan: ' + e.message, 'error');
+  } finally {
+    deleteLoading.value = false;
+  }
 }
 
 function promptToggleStatus(room: Room) {
@@ -149,6 +205,7 @@ async function handleSaveRoom() {
       building: formBuilding.value.trim(),
       capacity: Number(formCapacity.value),
       facilities: formFacilities.value.trim(),
+      imageUrl: formImageUrl.value.trim() || undefined,
       isActive: formIsActive.value,
     };
 
@@ -271,7 +328,7 @@ async function handleSaveRoom() {
           <!-- Room Photo -->
           <div class="relative aspect-[16/9] overflow-hidden bg-[#EAE4D9]">
             <img
-              :src="getRoomImg(r.id)"
+              :src="r.imageUrl || getRoomImg(r.id)"
               :alt="r.name"
               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               loading="lazy"
@@ -316,15 +373,29 @@ async function handleSaveRoom() {
         </div>
 
         <!-- Card Footer Actions -->
-        <div class="p-4 border-t border-[#E5DFD5] bg-[#FAF8F5] flex items-center justify-between gap-2">
-          <button
-            type="button"
-            @click="openEditModal(r)"
-            class="px-3.5 py-1.5 rounded-lg halden-btn-secondary text-xs flex items-center gap-1.5 cursor-pointer"
-          >
-            <Pencil class="w-3 h-3 text-[#78716C]" />
-            <span>Edit</span>
-          </button>
+        <div class="p-3.5 border-t border-[#E5DFD5] bg-[#FAF8F5] flex items-center justify-between gap-2">
+          <div class="flex items-center gap-1.5">
+            <button
+              :id="'edit-room-' + r.id + '-btn'"
+              type="button"
+              @click="openEditModal(r)"
+              class="px-3 py-1.5 rounded-lg halden-btn-secondary text-xs flex items-center gap-1.5 cursor-pointer"
+            >
+              <Pencil class="w-3 h-3 text-[#78716C]" />
+              <span>Edit</span>
+            </button>
+
+            <button
+              :id="'delete-room-' + r.id + '-btn'"
+              type="button"
+              @click="promptDeleteRoom(r)"
+              class="px-2.5 py-1.5 rounded-lg text-xs font-mono border border-[#FECACA] text-[#991B1B] bg-white hover:bg-[#FEE2E2] transition-colors flex items-center gap-1 cursor-pointer active:scale-95"
+              title="Hapus ruangan permanen"
+            >
+              <Trash2 class="w-3.5 h-3.5" />
+              <span class="text-[11px] font-medium hidden sm:inline">Hapus</span>
+            </button>
+          </div>
 
           <button
             :id="'toggle-room-' + r.id + '-btn'"
@@ -451,6 +522,69 @@ async function handleSaveRoom() {
                   class="w-full px-3.5 py-2.5 rounded-xl border border-[#D9D8D1] bg-white text-xs placeholder:text-[#A8A29E] focus:border-[#214C38] focus:ring-1 focus:ring-[#214C38] outline-hidden transition-all shadow-xs"
                 />
               </div>
+
+              <!-- Foto Ruangan / Upload Gambar -->
+              <div>
+                <label class="block font-semibold text-[#3E473F] mb-1.5">
+                  Foto Ruangan
+                </label>
+                
+                <div class="space-y-2">
+                  <div class="flex items-center gap-2">
+                    <input
+                      id="room-image-url"
+                      name="room-image-url"
+                      type="text"
+                      v-model="formImageUrl"
+                      placeholder="Masukkan URL foto atau unggah berkas dari komputer..."
+                      class="flex-1 px-3.5 py-2.5 rounded-xl border border-[#D9D8D1] bg-white text-xs placeholder:text-[#A8A29E] focus:border-[#214C38] focus:ring-1 focus:ring-[#214C38] outline-hidden transition-all shadow-xs"
+                    />
+
+                    <!-- Hidden file input -->
+                    <input
+                      ref="fileInputRef"
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      class="hidden"
+                      @change="handleFileSelected"
+                    />
+
+                    <!-- Upload button -->
+                    <button
+                      type="button"
+                      @click="triggerFileInput"
+                      :disabled="isUploadingImage"
+                      class="px-3.5 py-2.5 rounded-xl border border-[#D9D8D1] bg-white hover:bg-[#F1EFE9] text-xs font-semibold text-[#182019] flex items-center gap-1.5 shadow-xs transition-colors shrink-0 disabled:opacity-50 cursor-pointer"
+                    >
+                      <Loader2 v-if="isUploadingImage" class="w-3.5 h-3.5 animate-spin text-[#214C38]" />
+                      <Upload v-else class="w-3.5 h-3.5 text-[#5F675F]" />
+                      <span>{{ isUploadingImage ? 'Mengunggah...' : 'Unggah File' }}</span>
+                    </button>
+                  </div>
+
+                  <!-- Live Preview if image exists -->
+                  <div v-if="formImageUrl" class="relative rounded-xl border border-[#D9D8D1] overflow-hidden bg-[#FAF8F5] p-2 flex items-center gap-3">
+                    <img
+                      :src="formImageUrl"
+                      alt="Preview Foto Ruangan"
+                      class="w-16 h-12 object-cover rounded-lg border border-[#E5DFD5]"
+                      @error="(e: any) => e.target.style.display = 'none'"
+                    />
+                    <div class="flex-1 min-w-0 text-[11px]">
+                      <span class="font-medium text-[#182019] block truncate">{{ formImageUrl }}</span>
+                      <span class="text-[#5F675F] text-[10px]">Pratinjau foto ruangan siap disimpan</span>
+                    </div>
+                    <button
+                      type="button"
+                      @click="formImageUrl = ''"
+                      class="p-1 rounded-lg text-[#78716C] hover:text-[#991B1B] hover:bg-[#FEE2E2] transition-colors cursor-pointer"
+                      title="Hapus tautan foto"
+                    >
+                      <X class="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <!-- Footer Buttons -->
@@ -551,6 +685,66 @@ async function handleSaveRoom() {
                     ? 'Memproses...'
                     : (confirmToggleRoom.isActive ? 'Ya, Nonaktifkan Ruangan' : 'Ya, Aktifkan Ruangan') }}
                 </span>
+              </button>
+            </div>
+          </div>
+        </transition>
+      </div>
+    </Teleport>
+
+    <!-- Modal Konfirmasi Hapus Ruangan Permanen -->
+    <Teleport to="body">
+      <div
+        v-if="isConfirmDeleteOpen && confirmDeleteRoom"
+        id="delete-room-confirm-modal"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#182019]/45 backdrop-blur-sm"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="delete-dialog-title"
+      >
+        <transition name="modal-fade" appear>
+          <div class="relative w-full max-w-md rounded-[24px] bg-[#FBFAF7] border border-[#D9D8D1] shadow-2xl p-6 sm:p-7 space-y-4 text-[#182019]">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-xs border bg-[#FEE2E2] border-[#FECACA] text-[#991B1B]">
+                <Trash2 class="w-5 h-5" />
+              </div>
+              <div>
+                <p class="text-[10px] font-mono uppercase tracking-widest font-bold text-[#991B1B]">
+                  Konfirmasi Hapus Permanen
+                </p>
+                <h3 id="delete-dialog-title" class="font-serif text-lg font-bold text-[#182019]">
+                  Hapus Ruangan Selamanya?
+                </h3>
+              </div>
+            </div>
+
+            <div class="p-3.5 rounded-xl bg-white border border-[#D9D8D1] text-xs space-y-1">
+              <div class="font-bold text-[#182019] text-sm">{{ confirmDeleteRoom.name }}</div>
+              <div class="font-mono text-[#5F675F] text-[11px]">{{ confirmDeleteRoom.roomCode }} &bull; {{ confirmDeleteRoom.building }} &bull; {{ confirmDeleteRoom.capacity }} Kursi</div>
+            </div>
+
+            <p class="text-xs text-[#5F675F] leading-relaxed">
+              Tindakan ini akan <strong>menghapus ruangan secara permanen</strong> dari basis data inventaris. Ruangan yang masih memiliki jadwal aktif (Pending atau Disetujui) tidak dapat dihapus demi menjaga integritas data.
+            </p>
+
+            <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-[#D9D8D1]">
+              <button
+                type="button"
+                @click="isConfirmDeleteOpen = false"
+                :disabled="deleteLoading"
+                class="px-4 py-2.5 rounded-xl halden-btn-secondary text-xs font-semibold cursor-pointer disabled:opacity-50"
+              >
+                Batal
+              </button>
+              <button
+                id="execute-delete-room-btn"
+                type="button"
+                @click="executeDeleteRoom"
+                :disabled="deleteLoading"
+                class="px-5 py-2.5 rounded-xl text-xs font-semibold shadow-xs transition-all active:scale-95 cursor-pointer flex items-center gap-1.5 text-white bg-[#991B1B] hover:bg-[#7F1D1D] disabled:opacity-50"
+              >
+                <Loader2 v-if="deleteLoading" class="w-3.5 h-3.5 animate-spin" />
+                <span>{{ deleteLoading ? 'Menghapus...' : 'Ya, Hapus Ruangan' }}</span>
               </button>
             </div>
           </div>

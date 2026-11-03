@@ -1,5 +1,6 @@
 import { ref, computed } from 'vue';
 import type { UserProfile } from '../types';
+import { api } from '../api/client';
 
 export interface ToastMessage {
   id: string;
@@ -68,7 +69,33 @@ export function removeToast(id: string) {
   toasts.value = toasts.value.filter((t) => t.id !== id);
 }
 
-export function login(usernameInput: string, passwordInput: string): { success: boolean; message: string; role?: 'Admin' | 'Staff' | 'Student' } {
+export async function login(usernameInput: string, passwordInput: string): Promise<{ success: boolean; message: string; role?: 'Admin' | 'Staff' | 'Student' }> {
+  // Try real backend API authentication first
+  try {
+    const account = await api.loginApi(usernameInput.trim(), passwordInput);
+    if (account && account.username) {
+      const userProfile: UserProfile = {
+        username: account.username,
+        fullName: account.fullName,
+        email: account.email,
+        role: account.role as 'Admin' | 'Staff' | 'Student',
+        department: account.department,
+        avatarInitials: account.avatarInitials,
+      };
+
+      currentUser.value = userProfile;
+      localStorage.setItem('smartroom_user_session', JSON.stringify(userProfile));
+      addToast(`Selamat datang kembali, ${userProfile.fullName}! (${userProfile.role})`, 'success');
+
+      return { success: true, message: 'Otentikasi berhasil', role: userProfile.role };
+    }
+  } catch (apiErr: any) {
+    if (apiErr.status === 401 || (apiErr.message && !apiErr.message.includes('Failed to fetch') && !apiErr.message.includes('NetworkError'))) {
+      return { success: false, message: apiErr.message || 'Username atau kata sandi tidak sesuai.' };
+    }
+  }
+
+  // Fallback to presets if backend offline or mocked environment
   const normalizedUser = usernameInput.trim().toLowerCase();
   
   let matchedKey: 'Admin' | 'Staff' | 'Student' | null = null;

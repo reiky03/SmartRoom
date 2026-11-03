@@ -12,6 +12,34 @@ public static class DbSeeder
         // Ensure database is created
         await context.Database.EnsureCreatedAsync();
 
+        // Migrate ImageUrl column if missing
+        try
+        {
+            await context.Database.ExecuteSqlRawAsync("ALTER TABLE Rooms ADD COLUMN ImageUrl TEXT;");
+        }
+        catch
+        {
+            // Column already exists, safe to ignore
+        }
+
+        // Backfill default room images if missing
+        var existingRoomsWithoutImg = await context.Rooms.Where(r => r.ImageUrl == null || r.ImageUrl == "").ToListAsync();
+        if (existingRoomsWithoutImg.Count > 0)
+        {
+            var defaultImages = new[]
+            {
+                "https://images.unsplash.com/photo-1517502884422-41eaead166d4?auto=format&fit=crop&w=800&q=80",
+                "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&q=80",
+                "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80",
+                "https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?auto=format&fit=crop&w=800&q=80"
+            };
+            for (int i = 0; i < existingRoomsWithoutImg.Count; i++)
+            {
+                existingRoomsWithoutImg[i].ImageUrl = defaultImages[i % defaultImages.Length];
+            }
+            await context.SaveChangesAsync();
+        }
+
         var hasher = new PasswordHasher<User>();
 
         // Seed Users if empty
@@ -73,6 +101,7 @@ public static class DbSeeder
                 Building = "Gedung Fakultas TI",
                 Capacity = 50,
                 Facilities = "Proyektor 4K Laser, Dual Smart TV 75 Inch, Audio Conference 8-Mic, AC Central, Podium",
+                ImageUrl = "https://images.unsplash.com/photo-1517502884422-41eaead166d4?auto=format&fit=crop&w=800&q=80",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow.AddDays(-10)
             },
@@ -83,6 +112,7 @@ public static class DbSeeder
                 Building = "Gedung Cyber Lt. 3",
                 Capacity = 40,
                 Facilities = "40 PC Intel Core i9 32GB RAM, Gigabit Switch, AC Central, Interactive Whiteboard",
+                ImageUrl = "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&q=80",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow.AddDays(-8)
             },
@@ -93,6 +123,7 @@ public static class DbSeeder
                 Building = "Gedung Rektorat Lt. 1",
                 Capacity = 20,
                 Facilities = "Cisco Webex Room Bar, Meja Konferensi Mahoni, Soundproofing, Smart Dimming Light",
+                ImageUrl = "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow.AddDays(-5)
             },
@@ -103,6 +134,7 @@ public static class DbSeeder
                 Building = "Pusat Kegiatan Mahasiswa Lt. 1",
                 Capacity = 120,
                 Facilities = "Stage Panggung, Wireless Line Array Sound, Dual Laser Projector, Lighting Truss",
+                ImageUrl = "https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?auto=format&fit=crop&w=800&q=80",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow.AddDays(-3)
             }

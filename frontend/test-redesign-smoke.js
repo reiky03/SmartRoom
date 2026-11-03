@@ -60,7 +60,7 @@ try {
   await page.waitForFunction(() => location.pathname === '/admin/dashboard');
 
   await page.setViewport({ width: 1440, height: 900, deviceScaleFactor: 1 });
-  const adminRoutes = ['/admin/dashboard', '/admin/approvals', '/admin/rooms', '/admin/bookings'];
+  const adminRoutes = ['/admin/dashboard', '/admin/approvals', '/admin/rooms', '/admin/bookings', '/admin/users'];
   for (const route of adminRoutes) {
     await page.goto(`${baseUrl}${route}`, { waitUntil: 'networkidle0' });
     assert(new URL(page.url()).pathname === route, `Failed to load ${route}; current URL is ${page.url()}`);

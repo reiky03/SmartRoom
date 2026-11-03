@@ -24,12 +24,12 @@ const showPassword = ref(false);
 const errorMessage = ref('');
 const isSubmitting = ref(false);
 
-function handleLogin() {
+async function handleLogin() {
   errorMessage.value = '';
   isSubmitting.value = true;
 
   try {
-    const result = login(username.value, password.value);
+    const result = await login(username.value, password.value);
     if (!result.success) {
       errorMessage.value = result.message;
       addToast(result.message, 'error');

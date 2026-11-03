@@ -5,6 +5,7 @@ export interface Room {
   building: string;
   capacity: number;
   facilities?: string;
+  imageUrl?: string;
   isActive: boolean;
   createdAt: string;
 }
@@ -62,3 +63,32 @@ export interface UserProfile {
   department: string;
   avatarInitials: string;
 }
+
+export interface UserAccount {
+  id: number;
+  username: string;
+  fullName: string;
+  email: string;
+  role: 'Admin' | 'Staff' | 'Student';
+  department: string;
+  avatarInitials: string;
+  createdAt: string;
+}
+
+export interface CreateUserPayload {
+  username: string;
+  password: string;
+  fullName: string;
+  email: string;
+  role: number; // 0: Admin, 1: Staff, 2: Student
+  department?: string;
+}
+
+export interface UpdateUserPayload {
+  fullName: string;
+  email: string;
+  role: number;
+  department?: string;
+  newPassword?: string;
+}
+

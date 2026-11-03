@@ -136,4 +136,71 @@ public class RoomsApiController : ControllerBase
         }
         return Ok(new { message = "Status ruangan berhasil diperbarui." });
     }
+
+    /// <summary>
+    /// Menghapus ruangan secara permanen jika tidak ada jadwal aktif.
+    /// </summary>
+    [HttpDelete("{id:int}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteRoom(int id)
+    {
+        try
+        {
+            var success = await _roomService.DeleteRoomAsync(id);
+            if (!success)
+            {
+                return NotFound(new { message = $"Ruangan dengan ID {id} tidak ditemukan." });
+            }
+            return Ok(new { message = "Ruangan berhasil dihapus secara permanen." });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Mengunggah gambar ruangan baru.
+    /// </summary>
+    [HttpPost("upload-image")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> UploadImage([FromForm] IFormFile? file)
+    {
+        if (file == null || file.Length == 0)
+        {
+            return BadRequest(new { message = "Berkas gambar tidak boleh kosong." });
+        }
+
+        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp", ".gif" };
+        var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+        if (!allowedExtensions.Contains(ext))
+        {
+            return BadRequest(new { message = "Format gambar tidak didukung. Harap unggah berkas JPG, PNG, atau WebP." });
+        }
+
+        if (file.Length > 5 * 1024 * 1024)
+        {
+            return BadRequest(new { message = "Ukuran gambar terlalu besar. Maksimal 5MB." });
+        }
+
+        var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "rooms");
+        if (!Directory.Exists(uploadsFolder))
+        {
+            Directory.CreateDirectory(uploadsFolder);
+        }
+
+        var fileName = $"room_{DateTime.UtcNow:yyyyMMddHHmmss}_{Guid.NewGuid().ToString("N")[..8]}{ext}";
+        var filePath = Path.Combine(uploadsFolder, fileName);
+
+        using (var stream = new FileStream(filePath, FileMode.Create))
+        {
+            await file.CopyToAsync(stream);
+        }
+
+        var relativePath = $"/uploads/rooms/{fileName}";
+        return Ok(new { imageUrl = relativePath });
+    }
 }
