@@ -1,182 +1,284 @@
 @model SmartRoom.DTOs.CreateBookingDto
 @{
     ViewData["Title"] = "Ajukan Peminjaman Ruangan";
+    var activeRoomsList = ViewBag.ActiveRoomsList as IEnumerable<SmartRoom.Models.Room> ?? Enumerable.Empty<SmartRoom.Models.Room>();
+    var initialRoomId = Model.RoomId > 0 ? Model.RoomId : (activeRoomsList.FirstOrDefault()?.Id ?? 1);
+
+    var roomImages = new Dictionary<int, string>
+    {
+        { 1, "https://images.unsplash.com/photo-1517502884422-41eaead166d4?auto=format&fit=crop&w=600&q=80" },
+        { 2, "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=600&q=80" },
+        { 3, "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=600&q=80" },
+        { 4, "https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?auto=format&fit=crop&w=600&q=80" },
+    };
+    string fallbackImg = "https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=600&q=80";
 }
 
-<div class="space-y-6" x-data="bookingApp()">
+<div class="space-y-7" x-data="bookingApp()">
     
-    <!-- Header -->
-    <div class="flex items-center gap-3 pb-6 border-b border-zinc-200/80">
-        <a asp-action="Index" class="p-2 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-600 transition-colors shadow-xs">
-            <i data-lucide="arrow-left" class="w-4 h-4"></i>
-        </a>
-        <div>
-            <div class="text-[10px] font-mono text-zinc-400 uppercase tracking-wider font-semibold">Reservasi &bull; Self-Service Civitas</div>
-            <h1 class="text-2xl font-bold tracking-tight text-zinc-950">Formulir Peminjaman Ruangan</h1>
-            <p class="text-xs text-zinc-500 mt-0.5">Pencegahan Double-Booking LINQ Otomatis &bull; Verifikasi Alur Persetujuan</p>
+    <!-- macOS 27 Hero Header -->
+    <div class="liquid-glass-header p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+            <a asp-action="Index" class="liquid-glass-pill p-2.5 hover:bg-white text-[#1D1D1F] transition-all shadow-sm">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            </a>
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-[#007AFF]/12 text-[#0062CC] border border-[#007AFF]/25">
+                        RESERVASI CIVITAS AKADEMIKA
+                    </span>
+                    <span class="text-[#86868B]">&bull;</span>
+                    <span class="text-xs font-mono text-[#515154]">Sistem Cek Bentrok Otomatis</span>
+                </div>
+                <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-[#1D1D1F]">Formulir Peminjaman Ruangan</h1>
+                <p class="text-xs text-[#515154] mt-0.5">Pencegahan *Double-Booking* LINQ Otomatis &bull; Verifikasi Alur Persetujuan Transparan</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 text-xs font-mono text-[#86868B]">
+            <i data-lucide="shield-check" class="w-4 h-4 text-[#34C759]"></i>
+            <span>Verifikasi Real-Time Aktif</span>
         </div>
     </div>
 
     <!-- Conflict Warning Alert (Server Side) -->
     @if (ViewBag.ConflictAlert != null)
     {
-        <div class="p-4 rounded-xl bg-[#FEE2E2] border border-[#FECACA] text-[#991B1B] flex items-start gap-3 shadow-xs">
-            <i data-lucide="alert-octagon" class="w-5 h-5 text-[#991B1B] flex-shrink-0 mt-0.5"></i>
+        <div class="liquid-conflict-alert p-4 sm:p-5 flex items-start gap-3.5">
+            <div class="liquid-squircle-icon bg-[#FF3B30]/20 text-[#FF3B30] flex-shrink-0 mt-0.5">
+                <i data-lucide="alert-octagon" class="w-5 h-5 text-[#FF3B30]"></i>
+            </div>
             <div>
-                <div class="font-bold text-xs">Jadwal Bentrok Terdeteksi!</div>
-                <div class="text-xs text-[#991B1B]/90 mt-0.5">@ViewBag.ConflictAlert</div>
+                <div class="font-bold text-sm text-[#C91E14]">Jadwal Bentrok Terdeteksi di Server!</div>
+                <div class="text-xs text-[#C91E14]/90 mt-1 leading-relaxed">@ViewBag.ConflictAlert</div>
             </div>
         </div>
     }
 
-    <!-- 2-Column Modular Grid Layout -->
+    <!-- Real-Time Conflict Warning Alert (Client Side Alpine.js) -->
+    <div x-show="hasConflict" x-cloak
+         class="liquid-conflict-alert p-4 sm:p-5 flex items-start gap-3.5 animate-[liquidShake_0.4s_ease-in-out]">
+        <div class="liquid-squircle-icon bg-[#FF3B30]/20 text-[#FF3B30] flex-shrink-0 mt-0.5">
+            <i data-lucide="alert-triangle" class="w-5 h-5 text-[#FF3B30]"></i>
+        </div>
+        <div>
+            <div class="font-bold text-sm text-[#C91E14]">Peringatan Jadwal Bertabrakan (Bentrok)!</div>
+            <div class="text-xs text-[#C91E14]/90 mt-1 leading-relaxed" x-text="conflictMessage"></div>
+        </div>
+    </div>
+
+    <!-- 2-Column macOS 27 Liquid Glass Inspector Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
-        <!-- Left Column: The Form (7 cols) -->
-        <div class="lg:col-span-7 bg-white rounded-2xl border border-zinc-200/80 p-6 sm:p-8 shadow-xs">
-            <form asp-action="Create" method="post" class="space-y-5">
+        <!-- Left Column: The Booking Form (7 cols) -->
+        <div class="lg:col-span-7 liquid-glass-elevated p-6 sm:p-8">
+            <form asp-action="Create" method="post" class="space-y-6" x-on:submit="return validateBeforeSubmit($event)">
                 @Html.AntiForgeryToken()
-                <div asp-validation-summary="ModelOnly" class="p-3 rounded-xl bg-[#FEE2E2] border border-[#FECACA] text-[#991B1B] text-xs"></div>
+                <div asp-validation-summary="ModelOnly" class="p-3.5 rounded-2xl bg-[#FF3B30]/15 border border-[#FF3B30]/30 text-[#C91E14] text-xs font-mono"></div>
 
-                <!-- Room Selection -->
-                <div>
-                    <label asp-for="RoomId" class="block text-[11px] font-mono uppercase tracking-wider font-semibold text-zinc-700 mb-1.5">
-                        Pilih Ruangan <span class="text-rose-500">*</span>
-                    </label>
-                    <select asp-for="RoomId" id="selectRoom" x-model="selectedRoom" x-on:change="fetchAvailability()"
-                            class="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 border border-zinc-200 text-zinc-900 text-xs focus:bg-white focus:border-zinc-900 focus:outline-none transition-all font-sans" 
+                <!-- Room Visual Picker with Thumbnails, Name & Seats -->
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <label asp-for="RoomId" class="block text-[11px] font-mono uppercase tracking-wider font-semibold text-[#515154]">
+                            Pilih Ruangan Fasilitas <span class="text-[#FF3B30]">*</span>
+                        </label>
+                        <span class="text-[11px] text-[#86868B] font-mono">Pilih dari kartu visual di bawah</span>
+                    </div>
+
+                    <!-- Hidden/Standard Select for Reliable Form Submission & Fallback -->
+                    <select asp-for="RoomId" id="selectRoom" x-model="selectedRoom" x-on:change="onRoomChange()"
+                            class="liquid-glass-input w-full px-4 py-2 text-xs font-medium" 
                             asp-items="ViewBag.Rooms" required>
                         <option value="">— Silakan Pilih Ruangan —</option>
                     </select>
-                    <span asp-validation-for="RoomId" class="text-rose-500 text-[10px]"></span>
+                    <span asp-validation-for="RoomId" class="text-[#FF3B30] text-[10px] font-mono"></span>
+
+                    <!-- Visual Room Selection Cards Grid (Gambar Kecil, Nama Ruangan & Kursi) -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                        @foreach (var r in activeRoomsList)
+                        {
+                            var imgUrl = roomImages.ContainsKey(r.Id) ? roomImages[r.Id] : fallbackImg;
+                            <div x-on:click="selectRoomById('@r.Id')"
+                                 class="p-2.5 rounded-2xl border transition-all cursor-pointer flex items-center gap-3 group"
+                                 :class="selectedRoom == '@r.Id' ? 'bg-[#007AFF]/10 border-[#007AFF] shadow-sm ring-2 ring-[#007AFF]/20' : 'bg-white/60 hover:bg-white border-white/80 hover:border-black/10'">
+                                <img src="@imgUrl" alt="@r.Name" 
+                                     class="w-14 h-12 rounded-xl object-cover shadow-inner flex-shrink-0 group-hover:scale-105 transition-transform" />
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="liquid-glass-pill px-1.5 py-0.2 text-[9px] font-mono font-bold">@r.RoomCode</span>
+                                        <span class="text-[10px] font-mono text-[#116329] font-bold flex items-center gap-0.5">
+                                            <i data-lucide="users" class="w-2.5 h-2.5 text-[#34C759]"></i>
+                                            <span>@r.Capacity Kursi</span>
+                                        </span>
+                                    </div>
+                                    <div class="font-bold text-xs text-[#1D1D1F] truncate mt-0.5">@r.Name</div>
+                                    <div class="text-[10px] text-[#86868B] truncate">@r.Building</div>
+                                </div>
+                                <div x-show="selectedRoom == '@r.Id'" class="w-5 h-5 rounded-full bg-[#007AFF] text-white flex items-center justify-center flex-shrink-0">
+                                    <i data-lucide="check" class="w-3 h-3"></i>
+                                </div>
+                            </div>
+                        }
+                    </div>
                 </div>
 
                 <!-- Borrower Info Grid -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label asp-for="BorrowerName" class="block text-[11px] font-mono uppercase tracking-wider font-semibold text-zinc-700 mb-1.5">
-                            Nama Pemohon <span class="text-rose-500">*</span>
+                        <label asp-for="BorrowerName" class="block text-[11px] font-mono uppercase tracking-wider font-semibold text-[#515154] mb-1.5">
+                            Nama Pemohon <span class="text-[#FF3B30]">*</span>
                         </label>
                         <input asp-for="BorrowerName" 
                                value="@(string.IsNullOrEmpty(Model.BorrowerName) && User.Identity?.IsAuthenticated == true ? User.Identity.Name : Model.BorrowerName)"
-                               class="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 border border-zinc-200 text-zinc-900 text-xs focus:bg-white focus:border-zinc-900 focus:outline-none transition-all"
+                               class="liquid-glass-input w-full px-4 py-2.5 text-xs"
                                placeholder="Nama Pemohon / Organisasi" required />
-                        <span asp-validation-for="BorrowerName" class="text-rose-500 text-[10px]"></span>
+                        <span asp-validation-for="BorrowerName" class="text-[#FF3B30] text-[10px] font-mono"></span>
                     </div>
 
                     <div>
-                        <label asp-for="BorrowerEmail" class="block text-[11px] font-mono uppercase tracking-wider font-semibold text-zinc-700 mb-1.5">
-                            Email Kontak <span class="text-rose-500">*</span>
+                        <label asp-for="BorrowerEmail" class="block text-[11px] font-mono uppercase tracking-wider font-semibold text-[#515154] mb-1.5">
+                            Email Kontak <span class="text-[#FF3B30]">*</span>
                         </label>
                         <input asp-for="BorrowerEmail" type="email"
                                value="@(string.IsNullOrEmpty(Model.BorrowerEmail) && User.Identity?.IsAuthenticated == true ? User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value : Model.BorrowerEmail)"
-                               class="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 border border-zinc-200 text-zinc-900 text-xs font-mono focus:bg-white focus:border-zinc-900 focus:outline-none transition-all"
+                               class="liquid-glass-input w-full px-4 py-2.5 text-xs font-mono"
                                placeholder="nama@kampus.ac.id" required />
-                        <span asp-validation-for="BorrowerEmail" class="text-rose-500 text-[10px]"></span>
+                        <span asp-validation-for="BorrowerEmail" class="text-[#FF3B30] text-[10px] font-mono"></span>
                     </div>
                 </div>
 
                 <!-- Purpose -->
                 <div>
-                    <label asp-for="Purpose" class="block text-[11px] font-mono uppercase tracking-wider font-semibold text-zinc-700 mb-1.5">
-                        Agenda / Keperluan Peminjaman <span class="text-rose-500">*</span>
+                    <label asp-for="Purpose" class="block text-[11px] font-mono uppercase tracking-wider font-semibold text-[#515154] mb-1.5">
+                        Agenda / Keperluan Peminjaman <span class="text-[#FF3B30]">*</span>
                     </label>
                     <textarea asp-for="Purpose" rows="3" 
-                              class="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 border border-zinc-200 text-zinc-900 text-xs focus:bg-white focus:border-zinc-900 focus:outline-none transition-all"
+                              class="liquid-glass-input w-full px-4 py-2.5 text-xs"
                               placeholder="Contoh: Sidang Terbuka Tugas Akhir / Workshop Praktikum Jaringan Komputer" required></textarea>
-                    <span asp-validation-for="Purpose" class="text-rose-500 text-[10px]"></span>
+                    <span asp-validation-for="Purpose" class="text-[#FF3B30] text-[10px] font-mono"></span>
                 </div>
 
-                <!-- Timeslots -->
+                <!-- Timeslots Grid -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label asp-for="StartTime" class="block text-[11px] font-mono uppercase tracking-wider font-semibold text-zinc-700 mb-1.5">
-                            Waktu Mulai <span class="text-rose-500">*</span>
+                        <label asp-for="StartTime" class="block text-[11px] font-mono uppercase tracking-wider font-semibold text-[#515154] mb-1.5">
+                            Waktu Mulai <span class="text-[#FF3B30]">*</span>
                         </label>
-                        <input asp-for="StartTime" id="inputStartTime" x-model="startTime" x-on:change="fetchAvailability()" type="datetime-local" 
-                               class="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 border border-zinc-200 text-zinc-900 text-xs font-mono focus:bg-white focus:border-zinc-900 focus:outline-none transition-all"
-                               value="@Model.StartTime.ToString("yyyy-MM-ddTHH:mm")" required />
-                        <span asp-validation-for="StartTime" class="text-rose-500 text-[10px]"></span>
+                        <input type="datetime-local" name="StartTime" id="inputStartTime" x-model="startTime" x-on:change="onTimeChange()"
+                               class="liquid-glass-input w-full px-4 py-2.5 text-xs font-mono"
+                               value="@Model.StartTime.ToString("yyyy-MM-ddTHH:mm", System.Globalization.CultureInfo.InvariantCulture)" required />
+                        <span asp-validation-for="StartTime" class="text-[#FF3B30] text-[10px] font-mono"></span>
                     </div>
 
                     <div>
-                        <label asp-for="EndTime" class="block text-[11px] font-mono uppercase tracking-wider font-semibold text-zinc-700 mb-1.5">
-                            Waktu Selesai <span class="text-rose-500">*</span>
+                        <label asp-for="EndTime" class="block text-[11px] font-mono uppercase tracking-wider font-semibold text-[#515154] mb-1.5">
+                            Waktu Selesai <span class="text-[#FF3B30]">*</span>
                         </label>
-                        <input asp-for="EndTime" id="inputEndTime" type="datetime-local"
-                               class="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 border border-zinc-200 text-zinc-900 text-xs font-mono focus:bg-white focus:border-zinc-900 focus:outline-none transition-all"
-                               value="@Model.EndTime.ToString("yyyy-MM-ddTHH:mm")" required />
-                        <span asp-validation-for="EndTime" class="text-rose-500 text-[10px]"></span>
+                        <input type="datetime-local" name="EndTime" id="inputEndTime" x-model="endTime" x-on:change="onTimeChange()"
+                               class="liquid-glass-input w-full px-4 py-2.5 text-xs font-mono"
+                               value="@Model.EndTime.ToString("yyyy-MM-ddTHH:mm", System.Globalization.CultureInfo.InvariantCulture)" required />
+                        <span asp-validation-for="EndTime" class="text-[#FF3B30] text-[10px] font-mono"></span>
                     </div>
                 </div>
 
                 <!-- Submit Button Bar -->
-                <div class="flex items-center justify-end gap-3 pt-4 border-t border-zinc-100">
-                    <a asp-action="Index" class="px-4 py-2.5 rounded-xl border border-zinc-200 text-xs font-medium text-zinc-700 hover:bg-zinc-50 transition-colors">
+                <div class="flex items-center justify-end gap-3 pt-5 border-t border-black/[0.05]">
+                    <a asp-action="Index" class="liquid-btn-secondary px-5 py-2.5 text-xs">
                         Batal
                     </a>
                     <button type="submit" 
-                            class="px-5 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-medium shadow-xs transition-all active:scale-[0.98] flex items-center gap-1.5">
-                        <i data-lucide="send" class="w-3.5 h-3.5"></i>
-                        <span>Kirim Pengajuan</span>
+                            :disabled="hasConflict"
+                            :class="hasConflict ? 'opacity-50 cursor-not-allowed' : ''"
+                            class="liquid-btn-primary px-6 py-2.5 text-xs flex items-center gap-2">
+                        <i data-lucide="send" class="w-3.5 h-3.5 text-white"></i>
+                        <span>Kirim Pengajuan Reservasi</span>
                     </button>
                 </div>
             </form>
         </div>
 
         <!-- Right Column: Live Availability & Conflict Inspector (5 cols) -->
-        <div class="lg:col-span-5 space-y-4">
+        <div class="lg:col-span-5 space-y-5">
             
             <!-- Real-Time Slot Inspector Card -->
-            <div class="bg-white rounded-2xl border border-zinc-200/80 p-6 shadow-xs">
-                <div class="flex items-center justify-between pb-3 border-b border-zinc-100 mb-3">
+            <div class="liquid-glass-card p-6">
+                <div class="flex items-center justify-between pb-3.5 border-b border-black/[0.05] mb-4">
                     <div class="flex items-center gap-2">
-                        <i data-lucide="activity" class="w-4 h-4 text-zinc-700"></i>
-                        <span class="text-xs font-bold text-zinc-900 tracking-tight">Status Ketersediaan Slot</span>
+                        <div class="liquid-squircle-icon bg-[#007AFF]/12 text-[#007AFF] !w-7 !h-7 !rounded-lg">
+                            <i data-lucide="activity" class="w-3.5 h-3.5 text-[#007AFF]"></i>
+                        </div>
+                        <span class="text-xs font-bold text-[#1D1D1F] tracking-tight">Status Ketersediaan Slot</span>
                     </div>
-                    <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-100 border border-zinc-200 text-zinc-600 font-semibold" 
+                    <span class="liquid-glass-pill px-2.5 py-0.5 text-[10px] font-mono text-[#515154] font-semibold" 
                           x-text="dateLabel || 'Pilih Tanggal'"></span>
                 </div>
 
                 <!-- If room or date not yet selected -->
-                <div x-show="!selectedRoom" class="py-8 text-center text-zinc-400 text-xs font-mono">
-                    <i data-lucide="door-open" class="w-8 h-8 mx-auto mb-2 opacity-30"></i>
-                    <span>Pilih ruangan pada form untuk melihat ketersediaan slot jam.</span>
+                <div x-show="!selectedRoom" class="py-10 text-center text-[#86868B] text-xs font-mono">
+                    <i data-lucide="door-open" class="w-8 h-8 mx-auto mb-2 opacity-30 text-[#007AFF]"></i>
+                    <span>Pilih ruangan pada form untuk memeriksa ketersediaan slot jam.</span>
                 </div>
 
                 <!-- Loading State -->
-                <div x-show="selectedRoom && isLoading" x-cloak class="py-8 text-center text-zinc-500 text-xs font-mono flex items-center justify-center gap-2">
-                    <i data-lucide="loader-2" class="w-4 h-4 animate-spin text-zinc-700"></i>
-                    <span>Memverifikasi slot ketersediaan...</span>
+                <div x-show="selectedRoom && isLoading" x-cloak class="py-8 text-center text-[#515154] text-xs font-mono flex items-center justify-center gap-2">
+                    <i data-lucide="loader-2" class="w-4 h-4 animate-spin text-[#007AFF]"></i>
+                    <span>Memverifikasi slot ketersediaan ruangan...</span>
                 </div>
 
-                <!-- Loaded Slot List -->
-                <div x-show="selectedRoom && !isLoading" x-cloak class="space-y-3">
+                <!-- Loaded Slot List & Recommendations -->
+                <div x-show="selectedRoom && !isLoading" x-cloak class="space-y-4">
+                    
+                    <!-- Booked Slots List (Muncul jika ada orang lain yang meminjam di tanggal ini) -->
                     <template x-if="slots.length > 0">
                         <div>
-                            <div class="text-[11px] font-mono text-zinc-500 mb-2 font-medium">Slot terisi pada tanggal ini:</div>
+                            <div class="text-[11px] font-mono text-[#86868B] mb-2 font-semibold uppercase tracking-wider flex items-center justify-between">
+                                <span>Sudah Dipinjam Pada Tanggal Ini:</span>
+                                <span class="text-[#FF9500] font-bold" x-text="slots.length + ' Sesi'"></span>
+                            </div>
                             <div class="space-y-2">
                                 <template x-for="slot in slots" :key="slot.bookingReference">
-                                    <div class="p-2.5 rounded-xl border text-xs flex items-center justify-between"
-                                         :class="slot.status === 'Approved' ? 'bg-[#EDF3EC] border-[#BBF7D0] text-[#166534]' : 'bg-[#FEF9C3] border-[#FEF08A] text-[#854D0E]'">
+                                    <div class="p-3 rounded-xl border text-xs flex items-center justify-between transition-all"
+                                         :class="slot.status === 'Approved' ? 'event-pill-approved !relative' : 'event-pill-pending !relative'">
                                         <div class="flex items-center gap-2">
-                                            <span class="w-1.5 h-1.5 rounded-full" :class="slot.status === 'Approved' ? 'bg-[#166534]' : 'bg-[#854D0E]'"></span>
-                                            <span class="font-mono font-bold" x-text="formatTime(slot.startTime) + ' — ' + formatTime(slot.endTime)"></span>
+                                            <span class="w-2 h-2 rounded-full" :class="slot.status === 'Approved' ? 'bg-[#34C759]' : 'bg-[#FF9500]'"></span>
+                                            <span class="font-mono font-bold text-xs" x-text="formatTime(slot.startTime) + ' — ' + formatTime(slot.endTime) + ' WIB'"></span>
                                             <span class="text-[11px] opacity-80 truncate max-w-[120px]" x-text="'(' + slot.borrowerName + ')'"></span>
                                         </div>
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold" x-text="slot.status"></span>
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold" 
+                                              :class="slot.status === 'Approved' ? 'bg-[#34C759]/20 text-[#116329]' : 'bg-[#FF9500]/20 text-[#7A4500]'" 
+                                              x-text="slot.status"></span>
                                     </div>
                                 </template>
                             </div>
                         </div>
                     </template>
 
+                    <!-- Free Slot Recommendations (macOS 27 Interactive Slot Capsules) -->
+                    <div>
+                        <div class="text-[11px] font-mono text-[#86868B] mb-2 font-semibold uppercase tracking-wider flex items-center gap-1.5">
+                            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-[#34C759]"></i>
+                            <span>Rekomendasi Slot Siap Pakai (1-Klik Isi):</span>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <template x-for="rec in availableSlots" :key="rec.label">
+                                <button type="button" x-on:click="applySlot(rec.start, rec.end)"
+                                        class="liquid-slot-capsule flex items-center gap-1.5">
+                                    <i data-lucide="clock" class="w-3 h-3 text-[#34C759]"></i>
+                                    <span x-text="rec.label"></span>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- All Free Notice if 0 slots booked -->
                     <template x-if="slots.length === 0">
-                        <div class="p-4 rounded-xl bg-[#EDF3EC] border border-[#BBF7D0] text-[#166534] text-xs flex items-start gap-2.5">
-                            <i data-lucide="check-circle" class="w-4 h-4 text-[#166534] flex-shrink-0 mt-0.5"></i>
+                        <div class="p-4 rounded-2xl bg-[#34C759]/15 border border-[#34C759]/30 text-[#116329] text-xs flex items-start gap-3">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-[#34C759] flex-shrink-0 mt-0.5"></i>
                             <div>
-                                <div class="font-bold">Seluruh Slot Tersedia!</div>
-                                <div class="text-[11px] text-[#166534]/90 mt-0.5">Tidak ada jadwal booking lain pada tanggal ini. Anda bebas memilih jam.</div>
+                                <div class="font-bold text-sm">Seluruh Jam Masih Kosong!</div>
+                                <div class="text-[11px] text-[#116329]/90 mt-0.5 leading-relaxed">
+                                    Belum ada yang meminjam ruangan ini pada tanggal tersebut. Anda bebas memilih jam operasional kampus (08:00 — 18:00 WIB).
+                                </div>
                             </div>
                         </div>
                     </template>
@@ -184,22 +286,22 @@
             </div>
 
             <!-- Business Rule Specifications -->
-            <div class="bg-white rounded-2xl border border-zinc-200/80 p-5 shadow-xs space-y-3 text-xs text-zinc-600">
-                <div class="text-[11px] font-mono uppercase tracking-wider text-zinc-400 font-semibold flex items-center gap-1.5">
-                    <i data-lucide="shield-alert" class="w-3.5 h-3.5 text-zinc-600"></i>
+            <div class="liquid-glass-card p-6 space-y-3.5 text-xs text-[#515154]">
+                <div class="text-[11px] font-mono uppercase tracking-wider text-[#86868B] font-semibold flex items-center gap-2">
+                    <i data-lucide="shield-alert" class="w-4 h-4 text-[#007AFF]"></i>
                     <span>Ketentuan Validasi Backend</span>
                 </div>
-                <ul class="space-y-2 text-[11px] leading-relaxed">
+                <ul class="space-y-2.5 text-[11px] leading-relaxed">
                     <li class="flex items-start gap-2">
-                        <span class="w-1.5 h-1.5 rounded-full bg-zinc-900 mt-1.5 flex-shrink-0"></span>
+                        <span class="w-1.5 h-1.5 rounded-full bg-[#007AFF] mt-1.5 flex-shrink-0"></span>
                         <span><strong>Rentang Durasi:</strong> Minimal 30 menit dan maksimal 8 jam dalam satu pengajuan.</span>
                     </li>
                     <li class="flex items-start gap-2">
-                        <span class="w-1.5 h-1.5 rounded-full bg-zinc-900 mt-1.5 flex-shrink-0"></span>
-                        <span><strong>Anti Tumpang Tindih:</strong> Sistem otomatis menolak jadwal jika beririsan menit dengan booking berstatus <code>Approved</code> atau <code>Pending</code>.</span>
+                        <span class="w-1.5 h-1.5 rounded-full bg-[#007AFF] mt-1.5 flex-shrink-0"></span>
+                        <span><strong>Anti-Conflict Engine:</strong> Sistem otomatis menolak jadwal jika beririsan menit dengan booking berstatus <code>Approved</code> atau <code>Pending</code>.</span>
                     </li>
                     <li class="flex items-start gap-2">
-                        <span class="w-1.5 h-1.5 rounded-full bg-zinc-900 mt-1.5 flex-shrink-0"></span>
+                        <span class="w-1.5 h-1.5 rounded-full bg-[#007AFF] mt-1.5 flex-shrink-0"></span>
                         <span><strong>Persetujuan:</strong> Pengajuan akan masuk ke antrean administrator untuk diverifikasi.</span>
                     </li>
                 </ul>
@@ -213,19 +315,58 @@
     <script>
         function bookingApp() {
             return {
-                selectedRoom: '@Model.RoomId' || '',
-                startTime: '@Model.StartTime.ToString("yyyy-MM-ddTHH:mm")',
+                selectedRoom: '@initialRoomId',
+                startTime: '@(Model.StartTime != default ? Model.StartTime.ToString("yyyy-MM-ddTHH:mm", System.Globalization.CultureInfo.InvariantCulture) : DateTime.Today.AddHours(9).ToString("yyyy-MM-ddTHH:mm", System.Globalization.CultureInfo.InvariantCulture))',
+                endTime: '@(Model.EndTime != default ? Model.EndTime.ToString("yyyy-MM-ddTHH:mm", System.Globalization.CultureInfo.InvariantCulture) : DateTime.Today.AddHours(11).ToString("yyyy-MM-ddTHH:mm", System.Globalization.CultureInfo.InvariantCulture))',
                 isLoading: false,
                 dateLabel: '',
                 slots: [],
-                init() {
+                hasConflict: false,
+                conflictMessage: '',
+                get availableSlots() {
+                    const candidates = [
+                        { label: '08:00 — 10:00', start: '08:00', end: '10:00' },
+                        { label: '10:00 — 12:00', start: '10:00', end: '12:00' },
+                        { label: '13:00 — 15:00', start: '13:00', end: '15:00' },
+                        { label: '15:00 — 17:00', start: '15:00', end: '17:00' }
+                    ];
+                    if (!this.slots || this.slots.length === 0 || !this.dateLabel) return candidates;
+                    return candidates.filter(cand => {
+                        const cStart = new Date(`${this.dateLabel}T${cand.start}`);
+                        const cEnd = new Date(`${this.dateLabel}T${cand.end}`);
+                        return !this.slots.some(s => {
+                            if (s.status === 'Rejected' || s.status === 'Cancelled') return false;
+                            const sStart = new Date(s.startTime);
+                            const sEnd = new Date(s.endTime);
+                            return (cStart < sEnd && cEnd > sStart);
+                        });
+                    });
+                },
+                async init() {
                     if (this.selectedRoom && this.startTime) {
-                        this.fetchAvailability();
+                        await this.fetchAvailability();
+                    }
+                    this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
+                },
+                selectRoomById(id) {
+                    this.selectedRoom = id.toString();
+                    this.onRoomChange();
+                },
+                async onRoomChange() {
+                    await this.fetchAvailability();
+                },
+                async onTimeChange() {
+                    const startDatePart = this.startTime.split('T')[0];
+                    if (startDatePart !== this.dateLabel) {
+                        await this.fetchAvailability();
+                    } else {
+                        this.checkConflict();
                     }
                 },
                 async fetchAvailability() {
                     if (!this.selectedRoom || !this.startTime) {
                         this.slots = [];
+                        this.hasConflict = false;
                         return;
                     }
                     const dateStr = this.startTime.split('T')[0];
@@ -242,8 +383,59 @@
                         console.error('Error fetching availability:', e);
                     } finally {
                         this.isLoading = false;
+                        this.checkConflict();
                         this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
                     }
+                },
+                checkConflict() {
+                    this.hasConflict = false;
+                    this.conflictMessage = '';
+
+                    if (!this.startTime || !this.endTime || this.slots.length === 0) return;
+
+                    const userStart = new Date(this.startTime);
+                    const userEnd = new Date(this.endTime);
+
+                    if (userEnd <= userStart) {
+                        this.hasConflict = true;
+                        this.conflictMessage = 'Waktu selesai harus lebih besar dari waktu mulai.';
+                        return;
+                    }
+
+                    for (const s of this.slots) {
+                        if (s.status === 'Rejected' || s.status === 'Cancelled') continue;
+                        const slotStart = new Date(s.startTime);
+                        const slotEnd = new Date(s.endTime);
+
+                        // Overlap condition: (StartA < EndB) && (EndA > StartB)
+                        if (userStart < slotEnd && userEnd > slotStart) {
+                            this.hasConflict = true;
+                            const slotTimeStr = this.formatTime(s.startTime) + ' — ' + this.formatTime(s.endTime);
+                            this.conflictMessage = `Waktu yang Anda pilih bentrok dengan reservasi (${slotTimeStr} WIB) oleh ${s.borrowerName} [Status: ${s.status}]. Silakan pilih slot lain.`;
+                            break;
+                        }
+                    }
+                },
+                applySlot(startHour, endHour) {
+                    if (!this.startTime) {
+                        const today = new Date().toISOString().split('T')[0];
+                        this.startTime = `${today}T${startHour}`;
+                        this.endTime = `${today}T${endHour}`;
+                    } else {
+                        const datePart = this.startTime.split('T')[0];
+                        this.startTime = `${datePart}T${startHour}`;
+                        this.endTime = `${datePart}T${endHour}`;
+                    }
+                    this.checkConflict();
+                },
+                validateBeforeSubmit(e) {
+                    this.checkConflict();
+                    if (this.hasConflict) {
+                        e.preventDefault();
+                        alert(this.conflictMessage);
+                        return false;
+                    }
+                    return true;
                 },
                 formatTime(isoString) {
                     const d = new Date(isoString);

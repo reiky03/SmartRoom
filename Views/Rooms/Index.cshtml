@@ -1,144 +1,174 @@
 @model IEnumerable<SmartRoom.Models.Room>
 @{
-    ViewData["Title"] = "Katalog Ruangan";
+    ViewData["Title"] = "Inventaris Ruangan Kampus";
     bool? currentFilter = ViewBag.CurrentFilter;
+
+    var roomImages = new Dictionary<int, string>
+    {
+        { 1, "https://images.unsplash.com/photo-1517502884422-41eaead166d4?auto=format&fit=crop&w=800&q=80" },
+        { 2, "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&q=80" },
+        { 3, "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80" },
+        { 4, "https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?auto=format&fit=crop&w=800&q=80" },
+    };
+    string fallbackImg = "https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=800&q=80";
 }
 
-<div class="space-y-6">
+<div class="space-y-7">
 
-    <!-- Header Section -->
-    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-zinc-200/80">
-        <div>
-            <div class="flex items-center gap-2 mb-1.5">
-                <span class="text-[11px] font-mono text-zinc-400 uppercase tracking-wider font-semibold">Sarana &amp; Prasarana Kampus</span>
-                <span class="text-zinc-300">&bull;</span>
-                <span class="text-xs font-mono text-zinc-500">@Model.Count() Ruangan Terdaftar</span>
+    <!-- macOS 27 Hero Header -->
+    <div class="liquid-glass-header p-6 sm:p-8 flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+        <div class="relative z-10">
+            <div class="flex items-center gap-2 mb-2">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-semibold bg-[#007AFF]/12 text-[#0062CC] border border-[#007AFF]/25">
+                    SARANA &amp; PRASARANA KAMPUS
+                </span>
+                <span class="text-[#86868B]">&bull;</span>
+                <span class="text-xs font-mono text-[#515154]">@Model.Count() Ruangan Terdaftar</span>
             </div>
-            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-950">
-                Katalog &amp; Manajemen Ruangan
+            <h1 class="text-3xl font-bold tracking-tight text-[#1D1D1F] sm:text-4xl">
+                Inventaris Ruangan Kampus
             </h1>
-            <p class="text-xs sm:text-sm text-zinc-500 mt-1 max-w-xl">
-                Daftar ruang sidang, laboratorium, dan auditorium lengkap dengan kapasitas, fasilitas resmi, dan status ketersediaan.
+            <p class="text-sm text-[#515154] mt-1.5 max-w-xl leading-relaxed">
+                Daftar ruang sidang, laboratorium berstandar industri, dan aula serbaguna lengkap dengan spesifikasi fasilitas multimedia serta kapasitas tempat duduk.
             </p>
         </div>
 
         @if (User.IsInRole("Admin"))
         {
-            <a asp-action="Create" 
-               class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-medium shadow-sm transition-all active:scale-[0.98] flex-shrink-0">
-                <i data-lucide="plus" class="w-4 h-4"></i>
-                <span>Tambah Ruangan Baru</span>
-            </a>
+            <div class="relative z-10 flex-shrink-0">
+                <a asp-action="Create" 
+                   class="liquid-btn-primary">
+                    <i data-lucide="plus" class="w-4 h-4 text-white"></i>
+                    <span>Tambah Ruangan Baru</span>
+                </a>
+            </div>
         }
     </div>
 
-    <!-- Filter Pills (Modulify Segmented Control) -->
-    <div class="flex items-center gap-1 bg-zinc-100 p-1 rounded-xl border border-zinc-200/60 w-fit text-xs font-medium text-zinc-600">
+    <!-- iOS Segmented Filter Control -->
+    <div class="liquid-segmented-control text-xs font-medium text-[#515154] w-fit">
         <a asp-action="Index" 
-           class="px-3.5 py-1.5 rounded-lg transition-all @(currentFilter == null ? "bg-white text-zinc-900 shadow-xs font-semibold" : "hover:text-zinc-900")">
+           class="liquid-segmented-item @(currentFilter == null ? "active" : "")">
             Semua (@Model.Count())
         </a>
         <a asp-action="Index" asp-route-isActive="true" 
-           class="px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 @(currentFilter == true ? "bg-white text-zinc-900 shadow-xs font-semibold" : "hover:text-zinc-900")">
-            <span class="w-1.5 h-1.5 rounded-full bg-[#166534]"></span>
+           class="liquid-segmented-item flex items-center gap-1.5 @(currentFilter == true ? "active" : "")">
+            <span class="w-1.5 h-1.5 rounded-full bg-[#34C759]"></span>
             Aktif Saja (@Model.Count(r => r.IsActive))
         </a>
         <a asp-action="Index" asp-route-isActive="false" 
-           class="px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 @(currentFilter == false ? "bg-white text-zinc-900 shadow-xs font-semibold" : "hover:text-zinc-900")">
-            <span class="w-1.5 h-1.5 rounded-full bg-zinc-400"></span>
+           class="liquid-segmented-item flex items-center gap-1.5 @(currentFilter == false ? "active" : "")">
+            <span class="w-1.5 h-1.5 rounded-full bg-[#86868B]"></span>
             Nonaktif (@Model.Count(r => !r.IsActive))
         </a>
     </div>
 
-    <!-- Rooms Bento Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+    <!-- Rooms Bento Widget Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         @if (Model.Any())
         {
             @foreach (var room in Model)
             {
-                <div class="bg-white border border-zinc-200/80 rounded-2xl p-6 shadow-xs hover:border-zinc-300 hover:shadow-[0_2px_12px_rgba(0,0,0,0.03)] transition-all duration-200 flex flex-col justify-between @(!room.IsActive ? "opacity-75 bg-zinc-50/50" : "")">
+                var roomImg = roomImages.ContainsKey(room.Id) ? roomImages[room.Id] : fallbackImg;
+
+                <div class="liquid-glass-card group flex flex-col justify-between overflow-hidden @(!room.IsActive ? "opacity-75" : "")">
                     <div>
-                        <!-- Code Tag & Status Pill -->
-                        <div class="flex items-center justify-between mb-3.5">
-                            <span class="px-2.5 py-1 rounded-md bg-zinc-100 text-zinc-800 font-mono text-[11px] font-bold border border-zinc-200/80">
-                                @room.RoomCode
-                            </span>
+                        <!-- macOS 27 Squircle Image Widget Frame -->
+                        <div class="relative overflow-hidden rounded-[16px] m-2.5 mb-4 h-48 bg-black/5">
+                            <img src="@roomImg" alt="@room.Name" 
+                                 class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105" />
+                            
+                            <!-- Liquid Glass Floating Badges Overlay -->
+                            <div class="absolute inset-0 p-3 flex flex-col justify-between pointer-events-none">
+                                <div class="flex items-center justify-between w-full">
+                                    <!-- Room Code Pill -->
+                                    <span class="liquid-glass-pill px-2.5 py-1 text-[11px] font-mono font-bold text-[#1D1D1F] shadow-sm pointer-events-auto">
+                                        @room.RoomCode
+                                    </span>
 
-                            @if (room.IsActive)
-                            {
-                                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-medium bg-[#EDF3EC] text-[#166534] border border-[#BBF7D0]">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-[#166534]"></span> Aktif
-                                </span>
-                            }
-                            else
-                            {
-                                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-medium bg-zinc-100 text-zinc-500 border border-zinc-200">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-zinc-400"></span> Nonaktif
-                                </span>
-                            }
-                        </div>
-
-                        <!-- Room Name & Building -->
-                        <h3 class="text-base font-bold text-zinc-950 tracking-tight mb-1">@room.Name</h3>
-                        <div class="flex items-center gap-1.5 text-xs text-zinc-500 mb-4">
-                            <i data-lucide="map-pin" class="w-3.5 h-3.5 text-zinc-400"></i>
-                            <span>@room.Building</span>
-                        </div>
-
-                        <!-- Capacity Block -->
-                        <div class="p-3 rounded-xl bg-zinc-50 border border-zinc-200/60 flex items-center justify-between text-xs mb-4">
-                            <span class="text-zinc-500 font-medium">Kapasitas Maksimal</span>
-                            <span class="font-mono font-bold text-zinc-900 flex items-center gap-1.5">
-                                <i data-lucide="users" class="w-3.5 h-3.5 text-zinc-600"></i>
-                                @room.Capacity Orang
-                            </span>
-                        </div>
-
-                        <!-- Facilities Cloud -->
-                        <div class="mb-4">
-                            <div class="text-[10px] font-mono uppercase tracking-wider text-zinc-400 font-semibold mb-2">Fasilitas Ruangan</div>
-                            <div class="flex flex-wrap gap-1.5">
-                                @if (!string.IsNullOrWhiteSpace(room.Facilities))
-                                {
-                                    @foreach (var f in room.Facilities.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                                    <!-- Status Pill -->
+                                    @if (room.IsActive)
                                     {
-                                        <span class="px-2.5 py-0.5 rounded-md bg-zinc-100 text-zinc-700 text-[11px] border border-zinc-200/60 font-medium">
-                                            @f
+                                        <span class="liquid-glass-pill px-2.5 py-1 text-[11px] font-mono font-semibold text-[#116329] flex items-center gap-1.5 shadow-sm pointer-events-auto">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-[#34C759]"></span> Aktif
                                         </span>
                                     }
-                                }
-                                else
-                                {
-                                    <span class="text-xs text-zinc-400 italic">Standar perkuliahan / pertemuan</span>
-                                }
+                                    else
+                                    {
+                                        <span class="liquid-glass-pill px-2.5 py-1 text-[11px] font-mono font-semibold text-[#86868B] flex items-center gap-1.5 shadow-sm pointer-events-auto">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-[#86868B]"></span> Nonaktif
+                                        </span>
+                                    }
+                                </div>
+
+                                <!-- Capacity Pill Bottom Right -->
+                                <div class="self-end">
+                                    <span class="liquid-glass-pill px-2.5 py-1 text-[11px] font-mono font-bold text-[#1D1D1F] flex items-center gap-1.5 shadow-sm pointer-events-auto">
+                                        <i data-lucide="users" class="w-3.5 h-3.5 text-[#007AFF]"></i>
+                                        <span>@room.Capacity Kursi</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card Body: Name & Location -->
+                        <div class="px-5 pb-2">
+                            <h3 class="text-base font-bold text-[#1D1D1F] tracking-tight group-hover:text-[#007AFF] transition-colors mb-1">
+                                @room.Name
+                            </h3>
+                            <div class="flex items-center gap-1.5 text-xs text-[#515154] mb-4">
+                                <i data-lucide="map-pin" class="w-3.5 h-3.5 text-[#007AFF]"></i>
+                                <span>@room.Building</span>
+                            </div>
+
+                            <!-- Facilities (macOS Finder Tags) -->
+                            <div class="space-y-1.5 mb-4">
+                                <div class="text-[10px] font-mono uppercase tracking-wider text-[#86868B] font-semibold">
+                                    Fasilitas Ruangan
+                                </div>
+                                <div class="flex flex-wrap gap-1.5">
+                                    @if (!string.IsNullOrWhiteSpace(room.Facilities))
+                                    {
+                                        @foreach (var f in room.Facilities.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                                        {
+                                            <span class="finder-tag">
+                                                @f
+                                            </span>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="text-xs text-[#86868B] italic">Standar perkuliahan / pertemuan</span>
+                                    }
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Footer Controls (Separated by Role) -->
-                    <div class="pt-4 border-t border-zinc-100 mt-auto">
+                    <div class="p-4 px-5 border-t border-black/[0.05] bg-white/40 mt-auto">
                         @if (User.IsInRole("Admin"))
                         {
                             <div class="flex items-center justify-between gap-2">
-                                <div class="flex items-center gap-1.5">
+                                <div class="flex items-center gap-2">
                                     <a asp-action="Edit" asp-route-id="@room.Id" 
-                                       class="px-3 py-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 text-xs font-medium text-zinc-700 transition-colors inline-flex items-center gap-1.5">
-                                        <i data-lucide="pencil" class="w-3 h-3 text-zinc-500"></i>
+                                       class="liquid-btn-secondary py-1.5 px-3 text-xs inline-flex items-center gap-1.5">
+                                        <i data-lucide="pencil" class="w-3 h-3 text-[#515154]"></i>
                                         <span>Edit</span>
                                     </a>
                                     <form asp-action="ToggleStatus" asp-route-id="@room.Id" method="post" class="m-0">
                                         @Html.AntiForgeryToken()
                                         <button type="submit" 
-                                                class="px-3 py-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 text-xs font-medium @(room.IsActive ? "text-amber-700" : "text-[#166534]") transition-colors inline-flex items-center gap-1.5">
+                                                class="liquid-glass-subtle hover:bg-white px-3 py-1.5 rounded-full text-xs font-semibold @(room.IsActive ? "text-[#7A4500]" : "text-[#116329]") transition-all inline-flex items-center gap-1.5">
                                             <i data-lucide="power" class="w-3 h-3"></i>
                                             <span>@(room.IsActive ? "Nonaktifkan" : "Aktifkan")</span>
                                         </button>
                                     </form>
                                 </div>
                                 <form asp-action="Delete" asp-route-id="@room.Id" method="post" class="m-0"
-                                      onsubmit="return confirm('Hapus ruangan @room.Name?');">
+                                      onsubmit="return confirm('Hapus ruangan @room.Name dari inventaris kampus?');">
                                     @Html.AntiForgeryToken()
-                                    <button type="submit" class="p-1.5 rounded-lg hover:bg-rose-50 text-zinc-400 hover:text-rose-600 transition-colors" title="Hapus Ruangan">
+                                    <button type="submit" class="p-2 rounded-full hover:bg-[#FF3B30]/10 text-[#86868B] hover:text-[#FF3B30] transition-colors" title="Hapus Ruangan">
                                         <i data-lucide="trash-2" class="w-4 h-4"></i>
                                     </button>
                                 </form>
@@ -150,14 +180,14 @@
                             @if (room.IsActive)
                             {
                                 <a asp-controller="Bookings" asp-action="Create" asp-route-roomId="@room.Id" 
-                                   class="w-full py-2 px-3 rounded-lg text-center text-xs font-medium bg-zinc-900 hover:bg-zinc-800 text-white shadow-xs transition-all active:scale-[0.98] flex items-center justify-center gap-2">
-                                    <i data-lucide="calendar-plus" class="w-3.5 h-3.5"></i>
+                                   class="liquid-btn-primary w-full py-2.5 text-center flex items-center justify-center gap-2">
+                                    <i data-lucide="calendar-plus" class="w-3.5 h-3.5 text-white"></i>
                                     <span>Pinjam Ruangan Ini</span>
                                 </a>
                             }
                             else
                             {
-                                <div class="w-full py-2 px-3 rounded-lg text-center text-xs font-medium bg-zinc-100 text-zinc-400 cursor-not-allowed">
+                                <div class="w-full py-2.5 px-3 rounded-full text-center text-xs font-medium bg-black/[0.04] text-[#86868B] cursor-not-allowed">
                                     Ruangan Sedang Nonaktif
                                 </div>
                             }
@@ -168,14 +198,14 @@
         }
         else
         {
-            <div class="col-span-full py-16 text-center bg-white rounded-2xl border border-zinc-200/80 p-8 shadow-xs">
-                <i data-lucide="door-closed" class="w-10 h-10 text-zinc-300 mx-auto mb-3"></i>
-                <h3 class="text-sm font-bold text-zinc-800 mb-1">Tidak Ada Ruangan</h3>
-                <p class="text-xs text-zinc-500 mb-4">Belum ada inventaris ruangan dengan filter yang dipilih.</p>
+            <div class="col-span-full py-16 text-center liquid-glass-card p-8">
+                <i data-lucide="door-closed" class="w-12 h-12 text-[#86868B]/40 mx-auto mb-3"></i>
+                <h3 class="text-base font-bold text-[#1D1D1F] mb-1">Tidak Ada Ruangan</h3>
+                <p class="text-xs text-[#515154] mb-4">Belum ada inventaris ruangan dengan filter yang dipilih.</p>
                 @if (User.IsInRole("Admin"))
                 {
-                    <a asp-action="Create" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-900 text-white text-xs font-medium hover:bg-zinc-800 shadow-xs">
-                        <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                    <a asp-action="Create" class="liquid-btn-primary inline-flex items-center gap-2">
+                        <i data-lucide="plus" class="w-4 h-4 text-white"></i>
                         <span>Tambah Ruangan Baru</span>
                     </a>
                 }

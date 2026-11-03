@@ -1,89 +1,99 @@
 @model SmartRoom.Models.Room
 @{
-    ViewData["Title"] = "Edit Ruangan";
+    ViewData["Title"] = "Perbarui Ruangan";
 }
 
-<div class="max-w-2xl mx-auto my-4 space-y-6">
-    <!-- Header -->
-    <div class="flex items-center gap-3 pb-6 border-b border-zinc-200/80">
-        <a asp-action="Index" class="p-2 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-600 transition-colors shadow-xs">
-            <i data-lucide="arrow-left" class="w-4 h-4"></i>
-        </a>
-        <div>
-            <div class="text-[10px] font-mono text-zinc-400 uppercase tracking-wider font-semibold">Administrator Desk</div>
-            <h1 class="text-xl font-bold tracking-tight text-zinc-950">Perbarui Ruangan: @Model.Name</h1>
-            <p class="text-xs text-zinc-500 font-mono mt-0.5">Kode: @Model.RoomCode &bull; ID #@Model.Id</p>
+<div class="max-w-2xl mx-auto my-4 space-y-7">
+    
+    <!-- macOS 27 Header -->
+    <div class="liquid-glass-header p-6 sm:p-7 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+            <a asp-action="Index" class="liquid-glass-pill p-2.5 hover:bg-white text-[#1D1D1F] transition-all shadow-sm">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            </a>
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-[#007AFF]/12 text-[#0062CC] border border-[#007AFF]/25">
+                        ADMINISTRATOR DESK
+                    </span>
+                    <span class="text-[#86868B]">&bull;</span>
+                    <span class="text-xs font-mono text-[#515154]">ID #@Model.Id</span>
+                </div>
+                <h1 class="text-2xl font-bold tracking-tight text-[#1D1D1F]">Perbarui Ruangan: @Model.Name</h1>
+                <p class="text-xs text-[#515154] font-mono mt-0.5">Kode Ruangan: @Model.RoomCode</p>
+            </div>
         </div>
     </div>
 
-    <!-- Form Card -->
-    <div class="bg-white rounded-2xl border border-zinc-200/80 p-6 sm:p-8 shadow-xs">
+    <!-- Liquid Glass Form Card -->
+    <div class="liquid-glass-elevated p-6 sm:p-8">
         <form asp-action="Edit" asp-route-id="@Model.Id" method="post" class="space-y-5">
             @Html.AntiForgeryToken()
             <input type="hidden" asp-for="Id" />
             <input type="hidden" asp-for="CreatedAt" />
-            <div asp-validation-summary="ModelOnly" class="p-3 rounded-xl bg-[#FEE2E2] border border-[#FECACA] text-[#991B1B] text-xs"></div>
+            <div asp-validation-summary="ModelOnly" class="p-3.5 rounded-2xl bg-[#FF3B30]/15 border border-[#FF3B30]/30 text-[#C91E14] text-xs font-mono"></div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label asp-for="RoomCode" class="block text-[11px] font-mono uppercase tracking-wider font-semibold text-zinc-700 mb-1.5">
-                        Kode Ruangan <span class="text-rose-500">*</span>
+                    <label asp-for="RoomCode" class="block text-[11px] font-mono uppercase tracking-wider font-semibold text-[#515154] mb-1.5">
+                        Kode Ruangan <span class="text-[#FF3B30]">*</span>
                     </label>
-                    <input asp-for="RoomCode" class="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 border border-zinc-200 text-zinc-900 text-xs font-mono focus:bg-white focus:border-zinc-900 focus:outline-none transition-all" required />
-                    <span asp-validation-for="RoomCode" class="text-rose-500 text-[10px]"></span>
+                    <input asp-for="RoomCode" class="liquid-glass-input w-full px-4 py-2.5 text-xs font-mono font-bold" required />
+                    <span asp-validation-for="RoomCode" class="text-[#FF3B30] text-[10px] font-mono"></span>
                 </div>
 
                 <div>
-                    <label asp-for="Capacity" class="block text-[11px] font-mono uppercase tracking-wider font-semibold text-zinc-700 mb-1.5">
-                        Kapasitas Kursi <span class="text-rose-500">*</span>
+                    <label asp-for="Capacity" class="block text-[11px] font-mono uppercase tracking-wider font-semibold text-[#515154] mb-1.5">
+                        Kapasitas Kursi <span class="text-[#FF3B30]">*</span>
                     </label>
-                    <input asp-for="Capacity" type="number" min="1" max="1000" class="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 border border-zinc-200 text-zinc-900 text-xs font-mono focus:bg-white focus:border-zinc-900 focus:outline-none transition-all" required />
-                    <span asp-validation-for="Capacity" class="text-rose-500 text-[10px]"></span>
+                    <input asp-for="Capacity" type="number" min="1" max="1000" class="liquid-glass-input w-full px-4 py-2.5 text-xs font-mono font-bold" required />
+                    <span asp-validation-for="Capacity" class="text-[#FF3B30] text-[10px] font-mono"></span>
                 </div>
             </div>
 
             <div>
-                <label asp-for="Name" class="block text-[11px] font-mono uppercase tracking-wider font-semibold text-zinc-700 mb-1.5">
-                    Nama Ruangan <span class="text-rose-500">*</span>
+                <label asp-for="Name" class="block text-[11px] font-mono uppercase tracking-wider font-semibold text-[#515154] mb-1.5">
+                    Nama Ruangan <span class="text-[#FF3B30]">*</span>
                 </label>
-                <input asp-for="Name" class="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 border border-zinc-200 text-zinc-900 text-xs focus:bg-white focus:border-zinc-900 focus:outline-none transition-all" required />
-                <span asp-validation-for="Name" class="text-rose-500 text-[10px]"></span>
+                <input asp-for="Name" class="liquid-glass-input w-full px-4 py-2.5 text-xs" required />
+                <span asp-validation-for="Name" class="text-[#FF3B30] text-[10px] font-mono"></span>
             </div>
 
             <div>
-                <label asp-for="Building" class="block text-[11px] font-mono uppercase tracking-wider font-semibold text-zinc-700 mb-1.5">
-                    Gedung / Lokasi <span class="text-rose-500">*</span>
+                <label asp-for="Building" class="block text-[11px] font-mono uppercase tracking-wider font-semibold text-[#515154] mb-1.5">
+                    Gedung / Lokasi Kampus <span class="text-[#FF3B30]">*</span>
                 </label>
-                <input asp-for="Building" class="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 border border-zinc-200 text-zinc-900 text-xs focus:bg-white focus:border-zinc-900 focus:outline-none transition-all" required />
-                <span asp-validation-for="Building" class="text-rose-500 text-[10px]"></span>
+                <input asp-for="Building" class="liquid-glass-input w-full px-4 py-2.5 text-xs" required />
+                <span asp-validation-for="Building" class="text-[#FF3B30] text-[10px] font-mono"></span>
             </div>
 
             <div>
-                <label asp-for="Facilities" class="block text-[11px] font-mono uppercase tracking-wider font-semibold text-zinc-700 mb-1.5">
-                    Fasilitas Ruangan (Pisahkan dengan koma)
+                <label asp-for="Facilities" class="block text-[11px] font-mono uppercase tracking-wider font-semibold text-[#515154] mb-1.5">
+                    Fasilitas Ruangan (Pisahkan dengan tanda koma)
                 </label>
-                <textarea asp-for="Facilities" rows="3" class="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 border border-zinc-200 text-zinc-900 text-xs focus:bg-white focus:border-zinc-900 focus:outline-none transition-all"></textarea>
-                <span asp-validation-for="Facilities" class="text-rose-500 text-[10px]"></span>
+                <textarea asp-for="Facilities" rows="3" class="liquid-glass-input w-full px-4 py-2.5 text-xs"></textarea>
+                <span asp-validation-for="Facilities" class="text-[#FF3B30] text-[10px] font-mono"></span>
             </div>
 
-            <!-- Active Status Toggle -->
-            <div class="p-4 rounded-xl bg-zinc-50 border border-zinc-200/80 flex items-center justify-between">
+            <!-- iOS Smooth Active Status Toggle Switch -->
+            <div class="p-4 rounded-2xl bg-white/70 border border-white/80 shadow-xs flex items-center justify-between">
                 <div>
-                    <div class="text-xs font-semibold text-zinc-900">Status Operasional Aktif</div>
-                    <div class="text-[11px] text-zinc-500 mt-0.5">Jika dinonaktifkan, ruangan tidak dapat dipilih oleh mahasiswa/staf.</div>
+                    <div class="text-xs font-bold text-[#1D1D1F]">Status Operasional Aktif</div>
+                    <div class="text-[11px] text-[#515154] mt-0.5">Jika dinonaktifkan, ruangan tidak dapat dipilih oleh mahasiswa/staf.</div>
                 </div>
                 <label class="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" asp-for="IsActive" class="sr-only peer">
-                    <div class="w-11 h-6 bg-zinc-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-zinc-900"></div>
+                    <div class="w-11 h-6 bg-black/15 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#34C759]"></div>
                 </label>
             </div>
 
-            <div class="flex items-center justify-end gap-3 pt-4 border-t border-zinc-100">
-                <a asp-action="Index" class="px-4 py-2.5 rounded-xl border border-zinc-200 text-xs font-medium text-zinc-700 hover:bg-zinc-50 transition-colors">
+            <div class="flex items-center justify-end gap-3 pt-5 border-t border-black/[0.05]">
+                <a asp-action="Index" class="liquid-btn-secondary px-5 py-2.5 text-xs">
                     Batal
                 </a>
-                <button type="submit" class="px-5 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-medium shadow-xs transition-all active:scale-[0.98]">
-                    Simpan Perubahan
+                <button type="submit" class="liquid-btn-primary px-6 py-2.5 text-xs flex items-center gap-2">
+                    <i data-lucide="check" class="w-4 h-4 text-white"></i>
+                    <span>Simpan Perubahan</span>
                 </button>
             </div>
         </form>

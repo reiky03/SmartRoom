@@ -4,25 +4,25 @@ import { CheckCircle2, AlertCircle, Info, X } from 'lucide-vue-next';
 </script>
 
 <template>
-  <div class="fixed top-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none">
+  <div class="pointer-events-none fixed bottom-4 right-4 z-50 flex w-[calc(100%-2rem)] max-w-sm flex-col gap-2.5" aria-live="polite" aria-atomic="false">
     <transition-group name="modal-fade">
       <div
         v-for="toast in toasts"
         :key="toast.id"
-        class="pointer-events-auto p-3.5 rounded-xl border shadow-lg flex items-start justify-between gap-3 text-xs font-medium backdrop-blur-md transition-all"
+        class="floating-surface pointer-events-auto flex items-start justify-between gap-3 rounded-[16px] p-4 text-sm"
         :class="{
-          'bg-[#EDF3EC]/95 border-[#BBF7D0] text-[#166534]': toast.type === 'success',
-          'bg-[#FEE2E2]/95 border-[#FECACA] text-[#991B1B]': toast.type === 'error',
-          'bg-zinc-900/95 border-zinc-800 text-white': toast.type === 'info',
+          'border-l-4 border-l-emerald-600': toast.type === 'success',
+          'border-l-4 border-l-rose-600': toast.type === 'error',
+          'border-l-4 border-l-[#1C1917]': toast.type === 'info',
         }"
       >
-        <div class="flex items-center gap-2">
-          <CheckCircle2 v-if="toast.type === 'success'" class="w-4 h-4 flex-shrink-0 text-[#166534]" />
-          <AlertCircle v-else-if="toast.type === 'error'" class="w-4 h-4 flex-shrink-0 text-[#991B1B]" />
-          <Info v-else class="w-4 h-4 flex-shrink-0 text-zinc-400" />
-          <span class="leading-tight">{{ toast.message }}</span>
+        <div class="flex items-center gap-2.5">
+          <CheckCircle2 v-if="toast.type === 'success'" class="w-4 h-4 flex-shrink-0 text-emerald-600" />
+          <AlertCircle v-else-if="toast.type === 'error'" class="w-4 h-4 flex-shrink-0 text-rose-600" />
+          <Info v-else class="w-4 h-4 flex-shrink-0 text-[#1C1917]" />
+          <span class="leading-tight font-sans font-medium text-[#1C1917]">{{ toast.message }}</span>
         </div>
-        <button @click="removeToast(toast.id)" class="opacity-60 hover:opacity-100 p-0.5 rounded transition-opacity">
+        <button @click="removeToast(toast.id)" class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-[#8A908A] transition-colors hover:bg-[#F1EFE9] hover:text-[#182019]" aria-label="Tutup pesan">
           <X class="w-3.5 h-3.5" />
         </button>
       </div>

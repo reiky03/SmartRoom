@@ -1,23 +1,19 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { currentUser, isAuthenticated, isAdmin, isStudent, logout, quickLoginAs } from '../stores/auth';
 import { api } from '../api/client';
 import { BookingStatus } from '../types';
-import { 
-  Building2, 
-  Plus, 
-  ExternalLink, 
-  ChevronDown, 
-  Menu, 
+import {
+  Plus,
+  ExternalLink,
+  ChevronDown,
+  Menu,
   X,
-  ShieldCheck,
-  Calendar,
-  DoorOpen,
-  LayoutDashboard,
   Terminal,
   LogOut,
-  UserCheck
+  ShieldCheck,
+  GraduationCap,
 } from 'lucide-vue-next';
 
 const emit = defineEmits<{
@@ -29,281 +25,286 @@ const router = useRouter();
 const mobileOpen = ref(false);
 const profileDropdownOpen = ref(false);
 const pendingApprovalCount = ref(0);
+const studentBookingsCount = ref(0);
 
 onMounted(async () => {
+  await loadCounts();
+  window.addEventListener('booking-created', loadCounts);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('booking-created', loadCounts);
+});
+
+async function loadCounts() {
   if (isAdmin.value) {
     try {
-      const all = await api.getBookings({ status: BookingStatus.Pending });
-      pendingApprovalCount.value = all.length;
-    } catch (e) {
-      // ignore
+      const pending = await api.getBookings({ status: BookingStatus.Pending });
+      pendingApprovalCount.value = pending.length;
+    } catch {
+      // Navigation remains usable if the count endpoint is unavailable.
+    }
+  } else if (isStudent.value && currentUser.value?.email) {
+    try {
+      const my = await api.getBookings({ borrowerEmail: currentUser.value.email });
+      studentBookingsCount.value = my.length;
+    } catch {
+      // Navigation remains usable if the count endpoint is unavailable.
     }
   }
-});
+}
 
 function handleLogout() {
   logout();
   profileDropdownOpen.value = false;
+  mobileOpen.value = false;
   router.push('/login');
 }
 
 function handleSwitchRole(role: 'Admin' | 'Staff' | 'Student') {
   quickLoginAs(role);
   profileDropdownOpen.value = false;
-  if (role === 'Admin') {
-    router.push('/admin/dashboard');
+  mobileOpen.value = false;
+  router.push(role === 'Admin' ? '/admin/dashboard' : '/student/dashboard');
+  loadCounts();
+}
+
+function handleStudentNav(target: 'catalog' | 'bookings') {
+  if (target === 'catalog') {
+    if (route.path !== '/student/dashboard') {
+      router.push('/student/dashboard');
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    return;
+  }
+
+  if (route.path !== '/student/dashboard') {
+    router.push('/student/dashboard#my-bookings-section');
   } else {
-    router.push('/student/dashboard');
+    document.getElementById('my-bookings-section')?.scrollIntoView({ behavior: 'smooth' });
   }
 }
 </script>
 
 <template>
-  <header class="sticky top-0 z-40 w-full bg-[#FAFAFA]/90 backdrop-blur-md border-b border-zinc-200/80">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-16 gap-4">
-        
-        <!-- Left: Brand Logo & Navigation Links -->
-        <div class="flex items-center gap-8">
-          <!-- Brand -->
-          <router-link :to="isAuthenticated ? (isAdmin ? '/admin/dashboard' : '/student/dashboard') : '/login'" class="flex items-center gap-2.5 text-zinc-950 group">
-            <div class="w-8 h-8 rounded-xl bg-zinc-950 text-white flex items-center justify-center font-bold text-sm shadow-xs group-hover:scale-105 transition-transform duration-200">
-              <span class="font-mono tracking-tighter">S</span>
-            </div>
-            <div class="flex items-baseline gap-1.5">
-              <span class="font-bold text-base tracking-tight text-zinc-950">SmartRoom</span>
-              <span 
-                v-if="isAuthenticated" 
-                class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider border"
-                :class="isAdmin ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'"
-              >
-                {{ isAdmin ? 'Admin' : 'Civitas' }}
-              </span>
-            </div>
+  <header class="sticky top-0 z-40 border-b border-[#D9D8D1]/90 bg-[#FBFAF7]/94 backdrop-blur-xl">
+    <div class="mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-12">
+      <div class="flex min-h-[72px] items-center justify-between gap-4">
+        <div class="flex min-w-0 items-center gap-7 lg:gap-10">
+          <router-link
+            :to="isAuthenticated ? (isAdmin ? '/admin/dashboard' : '/student/dashboard') : '/login'"
+            class="group flex shrink-0 items-center gap-3 rounded-xl"
+          >
+            <span class="flex h-9 w-9 items-center justify-center rounded-[11px] bg-[#214C38] font-serif text-lg font-semibold text-white transition-transform duration-200 group-hover:-rotate-2 group-hover:scale-[1.03]">
+              S
+            </span>
+            <span class="hidden flex-col sm:flex">
+              <span class="font-serif text-[22px] font-semibold leading-none text-[#182019]">SmartRoom</span>
+              <span class="mt-1 hidden text-[10px] font-semibold text-[#596159] sm:block">Campus space desk</span>
+            </span>
           </router-link>
 
-          <!-- Desktop Nav Links (Role-Adaptive) -->
-          <nav v-if="isAuthenticated" class="hidden md:flex items-center gap-1 bg-zinc-100 p-1 rounded-xl border border-zinc-200/60 text-xs font-medium text-zinc-600">
-            
-            <!-- STUDENT LINKS -->
+          <nav v-if="isAuthenticated" class="hidden items-center gap-1 lg:flex" aria-label="Navigasi utama">
             <template v-if="isStudent || (!isAdmin && isAuthenticated)">
-              <router-link 
-                to="/student/dashboard" 
-                class="px-3 py-1.5 rounded-lg transition-all"
-                :class="route.path === '/student/dashboard' ? 'bg-white text-zinc-950 shadow-xs font-semibold' : 'hover:text-zinc-950 hover:bg-white/50'"
+              <button
+                type="button"
+                @click="handleStudentNav('catalog')"
+                class="min-h-11 rounded-xl px-4 text-sm font-semibold transition-colors"
+                :class="route.path === '/student/dashboard' && !route.hash.includes('my-bookings')
+                  ? 'bg-[#E4EEE8] text-[#214C38]'
+                  : 'text-[#5F675F] hover:bg-[#F1EFE9] hover:text-[#182019]'"
+                :aria-current="route.path === '/student/dashboard' && !route.hash.includes('my-bookings') ? 'page' : undefined"
               >
-                Portal Mahasiswa
-              </router-link>
+                Katalog
+              </button>
+              <button
+                id="nav-my-bookings-btn"
+                type="button"
+                @click="handleStudentNav('bookings')"
+                class="flex min-h-11 items-center gap-2 rounded-xl px-4 text-sm font-semibold transition-colors"
+                :class="route.hash.includes('my-bookings')
+                  ? 'bg-[#E4EEE8] text-[#214C38]'
+                  : 'text-[#5F675F] hover:bg-[#F1EFE9] hover:text-[#182019]'"
+                :aria-current="route.hash.includes('my-bookings') ? 'page' : undefined"
+              >
+                <span>Peminjaman saya</span>
+                <span v-if="studentBookingsCount > 0" class="rounded-full bg-[#214C38] px-2 py-0.5 text-[10px] font-bold text-white">
+                  {{ studentBookingsCount }}
+                </span>
+              </button>
             </template>
 
-            <!-- ADMINISTRATOR LINKS -->
             <template v-else-if="isAdmin">
-              <router-link 
-                to="/admin/dashboard" 
-                class="px-3 py-1.5 rounded-lg transition-all"
-                :class="route.path === '/admin/dashboard' ? 'bg-white text-zinc-950 shadow-xs font-semibold' : 'hover:text-zinc-950 hover:bg-white/50'"
+              <router-link
+                to="/admin/dashboard"
+                class="flex min-h-11 items-center rounded-xl px-4 text-sm font-semibold transition-colors"
+                active-class="bg-[#E4EEE8] text-[#214C38]"
+                exact-active-class="bg-[#E4EEE8] text-[#214C38]"
+                :class="route.path !== '/admin/dashboard' ? 'text-[#5F675F] hover:bg-[#F1EFE9] hover:text-[#182019]' : ''"
               >
-                Dashboard
+                Ringkasan
               </router-link>
-              <router-link 
-                to="/admin/approvals" 
-                class="px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5"
-                :class="route.path === '/admin/approvals' ? 'bg-white text-zinc-950 shadow-xs font-semibold' : 'hover:text-zinc-950 hover:bg-white/50'"
+              <router-link
+                to="/admin/approvals"
+                class="flex min-h-11 items-center gap-2 rounded-xl px-4 text-sm font-semibold transition-colors"
+                active-class="bg-[#E4EEE8] text-[#214C38]"
+                :class="route.path !== '/admin/approvals' ? 'text-[#5F675F] hover:bg-[#F1EFE9] hover:text-[#182019]' : ''"
               >
-                <span>Antrean Approval</span>
-                <span v-if="pendingApprovalCount > 0" class="px-1.5 py-0.2 rounded text-[9px] font-mono bg-rose-600 text-white font-bold">
+                <span>Persetujuan</span>
+                <span v-if="pendingApprovalCount > 0" class="rounded-full bg-[#A43D3D] px-2 py-0.5 text-[10px] font-bold text-white">
                   {{ pendingApprovalCount }}
                 </span>
               </router-link>
-              <router-link 
-                to="/admin/rooms" 
-                class="px-3 py-1.5 rounded-lg transition-all"
-                :class="route.path === '/admin/rooms' ? 'bg-white text-zinc-950 shadow-xs font-semibold' : 'hover:text-zinc-950 hover:bg-white/50'"
+              <router-link
+                to="/admin/rooms"
+                class="flex min-h-11 items-center rounded-xl px-4 text-sm font-semibold transition-colors"
+                active-class="bg-[#E4EEE8] text-[#214C38]"
+                :class="route.path !== '/admin/rooms' ? 'text-[#5F675F] hover:bg-[#F1EFE9] hover:text-[#182019]' : ''"
               >
-                Kelola Ruangan
+                Ruangan
               </router-link>
-              <router-link 
-                to="/admin/bookings" 
-                class="px-3 py-1.5 rounded-lg transition-all"
-                :class="route.path === '/admin/bookings' ? 'bg-white text-zinc-950 shadow-xs font-semibold' : 'hover:text-zinc-950 hover:bg-white/50'"
+              <router-link
+                to="/admin/bookings"
+                class="flex min-h-11 items-center rounded-xl px-4 text-sm font-semibold transition-colors"
+                active-class="bg-[#E4EEE8] text-[#214C38]"
+                :class="route.path !== '/admin/bookings' ? 'text-[#5F675F] hover:bg-[#F1EFE9] hover:text-[#182019]' : ''"
               >
-                Audit Log
+                Riwayat
               </router-link>
             </template>
           </nav>
         </div>
 
-        <!-- Right: Action CTA & User Menu -->
-        <div class="flex items-center gap-2.5">
-          
-          <!-- Swagger Doc Link (For Evaluators) -->
-          <a 
-            href="/swagger" 
-            target="_blank" 
-            class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono text-zinc-600 hover:text-zinc-950 hover:bg-zinc-100 transition-colors border border-transparent hover:border-zinc-200"
-          >
-            <Terminal class="w-3.5 h-3.5 text-zinc-500" />
-            <span>Swagger API</span>
-            <ExternalLink class="w-3 h-3 text-zinc-400" />
-          </a>
-
-          <!-- Primary Booking Button -->
-          <button 
-            v-if="isAuthenticated"
-            type="button"
+        <div class="flex shrink-0 items-center gap-2 sm:gap-3">
+          <button
+            v-if="isAuthenticated && currentUser?.role !== 'Admin'"
             id="navbar-booking-btn"
+            type="button"
             @click="emit('open-booking')"
-            class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-zinc-950 hover:bg-zinc-800 text-white text-xs font-medium shadow-xs transition-all active:scale-[0.98]"
+            class="halden-btn-primary pressable inline-flex min-h-11 items-center gap-2 px-3.5 text-sm sm:px-5"
           >
-            <Plus class="w-3.5 h-3.5" />
-            <span>Pinjam Ruangan</span>
+            <Plus class="h-4 w-4" aria-hidden="true" />
+            <span class="hidden sm:inline">Pinjam ruangan</span>
+            <span class="sm:hidden">Pinjam</span>
           </button>
 
-          <!-- Authenticated User Menu with RBAC Switcher -->
           <div v-if="isAuthenticated && currentUser" class="relative">
-            <button 
-              type="button"
+            <button
               id="user-profile-btn"
-              @click="profileDropdownOpen = !profileDropdownOpen" 
-              class="flex items-center gap-2 p-1.5 pl-2.5 rounded-xl border border-zinc-200/80 bg-white hover:bg-zinc-50 transition-colors shadow-xs"
+              type="button"
+              @click="profileDropdownOpen = !profileDropdownOpen"
+              class="flex min-h-11 items-center gap-2 rounded-xl border border-[#D9D8D1] bg-white px-2.5 text-left transition-colors hover:border-[#BFC3BC] hover:bg-[#FBFAF7]"
+              :aria-expanded="profileDropdownOpen"
+              aria-haspopup="menu"
             >
-              <div class="w-6 h-6 rounded-md bg-zinc-100 text-zinc-800 font-mono text-[11px] font-bold flex items-center justify-center border border-zinc-200">
+              <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-[#F1EFE9] text-xs font-bold text-[#214C38]">
                 {{ currentUser.avatarInitials }}
-              </div>
-              <div class="hidden sm:flex flex-col text-left">
-                <span class="text-xs font-semibold text-zinc-900 leading-none">{{ currentUser.fullName.split(' ')[0] }}</span>
-              </div>
-              <span 
-                class="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold border"
-                :class="currentUser.role === 'Admin' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'"
-              >
-                {{ currentUser.role }}
               </span>
-              <ChevronDown class="w-3.5 h-3.5 text-zinc-400" />
+              <span class="hidden max-w-24 truncate text-sm font-semibold text-[#182019] sm:block">
+                {{ currentUser.fullName.split(' ')[0] }}
+              </span>
+              <span class="hidden rounded-full px-2 py-0.5 text-[10px] font-bold md:inline"
+                :class="currentUser.role === 'Admin' ? 'status-danger' : 'status-success'">
+                {{ currentUser.role === 'Admin' ? 'Admin' : 'Civitas' }}
+              </span>
+              <ChevronDown class="h-4 w-4 text-[#596159] transition-transform" :class="profileDropdownOpen ? 'rotate-180' : ''" aria-hidden="true" />
             </button>
 
-            <!-- Backdrop for closing dropdown -->
-            <div 
-              v-if="profileDropdownOpen" 
-              class="fixed inset-0 z-40" 
-              @click="profileDropdownOpen = false"
-            ></div>
+            <div v-if="profileDropdownOpen" class="fixed inset-0 z-40 bg-black/20 sm:bg-transparent" @click="profileDropdownOpen = false"></div>
 
-            <!-- Dropdown Flyout -->
             <transition name="modal-fade">
-              <div 
+              <div
                 v-if="profileDropdownOpen"
-                class="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-zinc-200/80 py-2 text-xs text-zinc-700 z-50 font-sans"
+                class="floating-surface fixed inset-x-3 top-[76px] z-50 space-y-4 rounded-[20px] p-4 sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 sm:w-[21rem] max-w-[calc(100vw-1.5rem)] shadow-xl"
+                role="menu"
+                aria-label="Menu akun"
               >
-                <div class="px-4 py-3 border-b border-zinc-100">
-                  <div class="text-[10px] font-mono text-zinc-400 uppercase tracking-wider mb-1">Akun Terautentikasi</div>
-                  <div class="font-bold text-zinc-950 text-sm leading-tight">{{ currentUser.fullName }}</div>
-                  <div class="text-zinc-500 font-mono text-[11px] truncate">{{ currentUser.email }}</div>
-                  <div class="mt-1.5 text-[10px] text-zinc-500 font-mono bg-zinc-50 p-1.5 rounded-md border border-zinc-100">
+                <div class="rounded-[14px] bg-[#F5F3ED] p-4">
+                  <p class="text-xs font-semibold text-[#596159]">Akun aktif</p>
+                  <p class="mt-1 font-serif text-xl font-semibold leading-tight text-[#182019]">{{ currentUser.fullName }}</p>
+                  <p class="mt-1 truncate text-xs text-[#596159]">{{ currentUser.email }}</p>
+                  <p class="mt-3 flex items-center gap-2 text-xs font-semibold text-[#214C38]">
+                    <span class="h-2 w-2 rounded-full bg-[#214C38]" aria-hidden="true"></span>
                     {{ currentUser.department }}
-                  </div>
+                  </p>
                 </div>
 
-                <!-- Portfolio Reviewer Switcher -->
-                <div class="px-4 py-3 bg-zinc-50/60 border-b border-zinc-100">
-                  <div class="text-[10px] font-mono uppercase tracking-wider text-zinc-400 font-semibold mb-2">
-                    Uji RBAC (Pindah Peran Langsung):
+                <div>
+                  <div class="mb-2 flex items-center justify-between">
+                    <p class="text-xs font-semibold text-[#5F675F]">Mode demo peran</p>
+                    <span class="text-[10px] text-[#8A908A]">Akses 1 klik</span>
                   </div>
-                  <div class="grid grid-cols-2 gap-1.5 font-mono">
-                    <button 
-                      type="button" 
+                  <div class="grid grid-cols-2 gap-2">
+                    <button
                       id="switch-to-student-btn"
+                      type="button"
                       @click="handleSwitchRole('Student')"
-                      class="py-1.5 px-2 rounded-lg text-[10px] font-semibold transition-all text-center border"
-                      :class="currentUser.role === 'Student' ? 'bg-emerald-100 text-emerald-800 border-emerald-300 font-bold' : 'bg-white text-zinc-600 border-zinc-200 hover:bg-zinc-100'"
+                      class="flex min-h-11 items-center justify-center gap-2 rounded-xl border px-3 text-xs font-bold transition-colors"
+                      :class="currentUser.role === 'Student' ? 'border-[#214C38] bg-[#214C38] text-white' : 'border-[#D9D8D1] bg-white text-[#3E473F] hover:border-[#214C38]'"
                     >
-                      🎓 Mahasiswa
+                      <GraduationCap class="h-4 w-4" aria-hidden="true" /> Mahasiswa
                     </button>
-                    <button 
-                      type="button" 
+                    <button
                       id="switch-to-admin-btn"
+                      type="button"
                       @click="handleSwitchRole('Admin')"
-                      class="py-1.5 px-2 rounded-lg text-[10px] font-semibold transition-all text-center border"
-                      :class="currentUser.role === 'Admin' ? 'bg-rose-100 text-rose-800 border-rose-300 font-bold' : 'bg-white text-zinc-600 border-zinc-200 hover:bg-zinc-100'"
+                      class="flex min-h-11 items-center justify-center gap-2 rounded-xl border px-3 text-xs font-bold transition-colors"
+                      :class="currentUser.role === 'Admin' ? 'border-[#214C38] bg-[#214C38] text-white' : 'border-[#D9D8D1] bg-white text-[#3E473F] hover:border-[#214C38]'"
                     >
-                      👑 Admin
+                      <ShieldCheck class="h-4 w-4" aria-hidden="true" /> Admin
                     </button>
                   </div>
                 </div>
 
-                <!-- Logout -->
-                <div class="px-2 pt-1">
-                  <button 
-                    type="button" 
-                    @click="handleLogout"
-                    class="w-full text-left px-3 py-2 rounded-lg text-rose-600 hover:bg-rose-50 flex items-center gap-2 transition-colors font-medium"
-                  >
-                    <LogOut class="w-3.5 h-3.5" />
-                    <span>Keluar (Logout)</span>
+                <div class="space-y-1 border-t border-[#D9D8D1] pt-3">
+                  <a href="/swagger" target="_blank" class="flex min-h-11 items-center justify-between rounded-xl px-3 text-sm font-semibold text-[#5F675F] hover:bg-[#F5F3ED] hover:text-[#182019]">
+                    <span class="flex items-center gap-2"><Terminal class="h-4 w-4" aria-hidden="true" /> Dokumentasi API</span>
+                    <ExternalLink class="h-3.5 w-3.5" aria-hidden="true" />
+                  </a>
+                  <button type="button" @click="handleLogout" class="flex min-h-11 w-full items-center gap-2 rounded-xl px-3 text-sm font-semibold text-[#A43D3D] hover:bg-[#F7E8E6]">
+                    <LogOut class="h-4 w-4" aria-hidden="true" /> Keluar akun
                   </button>
                 </div>
               </div>
             </transition>
           </div>
 
-          <!-- Unauthenticated CTA -->
-          <router-link 
-            v-else
-            to="/login"
-            class="px-3.5 py-2 rounded-xl bg-zinc-950 text-white text-xs font-medium hover:bg-zinc-800 transition-colors shadow-xs"
-          >
-            Masuk ke Sistem
-          </router-link>
+          <router-link v-else to="/login" class="halden-btn-primary inline-flex min-h-11 items-center px-5 text-sm">Masuk portal</router-link>
 
-          <!-- Mobile Hamburger -->
-          <button @click="mobileOpen = !mobileOpen" class="md:hidden p-2 rounded-xl text-zinc-600 hover:bg-zinc-100">
-            <Menu v-if="!mobileOpen" class="w-5 h-5" />
-            <X v-else class="w-5 h-5" />
+          <button
+            v-if="isAuthenticated"
+            type="button"
+            class="flex h-11 w-11 items-center justify-center rounded-xl border border-[#D9D8D1] bg-white text-[#3E473F] lg:hidden"
+            @click="mobileOpen = !mobileOpen"
+            :aria-expanded="mobileOpen"
+            aria-label="Buka navigasi"
+          >
+            <X v-if="mobileOpen" class="h-5 w-5" aria-hidden="true" />
+            <Menu v-else class="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
       </div>
 
-      <!-- Mobile Navigation Drawer -->
-      <div v-if="mobileOpen" class="md:hidden py-3 border-t border-zinc-200/80 space-y-1">
-        <template v-if="isAuthenticated">
-          <router-link 
-            v-if="isStudent" 
-            to="/student/dashboard" 
-            @click="mobileOpen = false" 
-            class="block px-3 py-2 rounded-lg text-xs font-medium text-zinc-700 hover:bg-zinc-100"
-          >
-            Portal Mahasiswa
-          </router-link>
-
-          <template v-if="isAdmin">
-            <router-link to="/admin/dashboard" @click="mobileOpen = false" class="block px-3 py-2 rounded-lg text-xs font-medium text-zinc-700 hover:bg-zinc-100">
-              Dashboard
-            </router-link>
-            <router-link to="/admin/approvals" @click="mobileOpen = false" class="block px-3 py-2 rounded-lg text-xs font-medium text-zinc-700 hover:bg-zinc-100">
-              Antrean Approval
-            </router-link>
-            <router-link to="/admin/rooms" @click="mobileOpen = false" class="block px-3 py-2 rounded-lg text-xs font-medium text-zinc-700 hover:bg-zinc-100">
-              Kelola Ruangan
-            </router-link>
-            <router-link to="/admin/bookings" @click="mobileOpen = false" class="block px-3 py-2 rounded-lg text-xs font-medium text-zinc-700 hover:bg-zinc-100">
-              Audit Log
-            </router-link>
+      <transition name="modal-fade">
+        <nav v-if="mobileOpen && isAuthenticated" class="mb-4 grid gap-1 rounded-[18px] border border-[#D9D8D1] bg-white p-2 lg:hidden" aria-label="Navigasi mobile">
+          <template v-if="isStudent">
+            <button type="button" @click="handleStudentNav('catalog'); mobileOpen = false" class="min-h-11 rounded-xl px-4 text-left text-sm font-semibold text-[#182019] hover:bg-[#F1EFE9]">Katalog ruangan</button>
+            <button type="button" @click="handleStudentNav('bookings'); mobileOpen = false" class="flex min-h-11 items-center justify-between rounded-xl px-4 text-left text-sm font-semibold text-[#182019] hover:bg-[#F1EFE9]">
+              <span>Peminjaman saya</span>
+              <span v-if="studentBookingsCount > 0" class="rounded-full bg-[#214C38] px-2 py-0.5 text-[10px] text-white">{{ studentBookingsCount }}</span>
+            </button>
           </template>
-
-          <button 
-            @click="handleLogout" 
-            class="w-full text-left px-3 py-2 text-rose-600 text-xs font-medium hover:bg-rose-50 rounded-lg flex items-center gap-1.5 mt-2"
-          >
-            <LogOut class="w-3.5 h-3.5" />
-            <span>Keluar Akun</span>
-          </button>
-        </template>
-        <template v-else>
-          <router-link to="/login" @click="mobileOpen = false" class="block px-3 py-2 rounded-lg text-xs font-medium text-zinc-700 hover:bg-zinc-100">
-            Masuk ke Akun
-          </router-link>
-        </template>
-      </div>
+          <template v-else-if="isAdmin">
+            <router-link to="/admin/dashboard" @click="mobileOpen = false" class="flex min-h-11 items-center rounded-xl px-4 text-sm font-semibold text-[#182019] hover:bg-[#F1EFE9]">Ringkasan</router-link>
+            <router-link to="/admin/approvals" @click="mobileOpen = false" class="flex min-h-11 items-center justify-between rounded-xl px-4 text-sm font-semibold text-[#182019] hover:bg-[#F1EFE9]">
+              <span>Persetujuan</span><span v-if="pendingApprovalCount > 0" class="rounded-full bg-[#A43D3D] px-2 py-0.5 text-[10px] text-white">{{ pendingApprovalCount }}</span>
+            </router-link>
+            <router-link to="/admin/rooms" @click="mobileOpen = false" class="flex min-h-11 items-center rounded-xl px-4 text-sm font-semibold text-[#182019] hover:bg-[#F1EFE9]">Ruangan</router-link>
+            <router-link to="/admin/bookings" @click="mobileOpen = false" class="flex min-h-11 items-center rounded-xl px-4 text-sm font-semibold text-[#182019] hover:bg-[#F1EFE9]">Riwayat</router-link>
+          </template>
+        </nav>
+      </transition>
     </div>
   </header>
 </template>

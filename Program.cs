@@ -116,7 +116,7 @@ app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Route mappings: Web API (Attribute Routing) + SPA Fallback
+// Route mappings: Web API (Attribute Routing) + SPA fallback
 app.MapControllers();
 app.MapFallbackToFile("index.html");
 

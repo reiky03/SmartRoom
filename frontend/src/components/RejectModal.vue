@@ -28,46 +28,50 @@ function handleConfirm() {
 </script>
 
 <template>
-  <div v-if="isOpen && booking" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/50 backdrop-blur-xs">
+  <div v-if="isOpen && booking" class="fixed inset-0 z-50 flex items-center justify-center bg-[#182019]/35 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="reject-dialog-title">
     <transition name="modal-fade" appear>
       <div 
-        class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-zinc-200 text-xs"
-        @click.outside="emit('close')"
+        class="floating-surface relative w-full max-w-md space-y-5 rounded-[20px] p-5 sm:p-6"
       >
-        <div class="flex items-center justify-between pb-3 border-b border-zinc-100">
-          <div class="flex items-center gap-2">
-            <div class="w-7 h-7 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
+        <div class="flex items-center justify-between pb-3 border-b border-[#E5DFD5]">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 flex items-center justify-center shadow-xs">
               <XCircle class="w-4 h-4" />
             </div>
-            <h3 class="text-sm font-bold text-zinc-950">Tolak Pengajuan Peminjaman</h3>
+            <div>
+              <span class="text-sm font-semibold text-[#A43D3D]">Keputusan administrator</span>
+              <h3 id="reject-dialog-title" class="mt-1 font-serif text-2xl font-semibold text-[#182019]">Tolak pengajuan</h3>
+            </div>
           </div>
-          <button @click="emit('close')" class="p-1 rounded text-zinc-400 hover:text-zinc-600">
+          <button @click="emit('close')" class="flex h-11 w-11 items-center justify-center rounded-xl bg-[#F1EFE9] text-[#5F675F] hover:bg-[#E8E5DC] hover:text-[#182019]" aria-label="Tutup dialog penolakan">
             <X class="w-4 h-4" />
           </button>
         </div>
 
-        <div class="py-3 text-zinc-600">
-          Menolak peminjaman referensi <strong class="text-zinc-900 font-mono">{{ booking.bookingReference }}</strong> atas nama <strong class="text-zinc-900">{{ booking.borrowerName }}</strong>.
+        <div class="p-3.5 rounded-lg bg-white border border-[#E5DFD5] text-stone-700 leading-relaxed font-sans">
+          Menolak peminjaman referensi <strong class="text-[#1C1917] font-mono bg-[#F5F2EB] border border-[#E5DFD5] px-1.5 py-0.5 rounded text-[11px]">{{ booking.bookingReference }}</strong> atas nama <strong class="text-[#1C1917]">{{ booking.borrowerName }}</strong>.
         </div>
 
-        <div class="mb-4">
-          <label class="block text-[11px] font-mono uppercase tracking-wider font-semibold text-zinc-700 mb-1.5">
-            Alasan Penolakan <span class="text-rose-500">*</span>
+        <div>
+          <label for="rejection-notes" class="mb-2 block text-sm font-semibold text-[#3E473F]">
+            Alasan Resmi Penolakan <span class="text-rose-600">*</span>
           </label>
-          <textarea 
+          <textarea
+            id="rejection-notes"
+            name="rejection-notes"
             v-model="notes" 
             rows="3" 
             required
-            placeholder="Contoh: Ruangan dialokasikan untuk kegiatan evaluasi mendesak rektorat."
-            class="w-full px-3 py-2 rounded-xl bg-zinc-50 border border-zinc-200 text-xs text-zinc-800 focus:bg-white focus:border-zinc-900 focus:outline-none transition-all"
+            placeholder="Tuliskan alasan penolakan secara jelas agar pemohon dapat mengetahuinya pada portal mereka..."
+            class="halden-input w-full resize-none px-3.5 py-3 text-sm placeholder:text-[#8A908A]"
           ></textarea>
         </div>
 
-        <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-zinc-100">
+        <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-[#E5DFD5]">
           <button 
             type="button" 
             @click="emit('close')"
-            class="px-3.5 py-2 rounded-xl border border-zinc-200 text-xs font-medium text-zinc-600 hover:bg-zinc-50 transition-colors"
+            class="halden-btn-secondary px-4 text-sm"
           >
             Batal
           </button>
@@ -75,7 +79,7 @@ function handleConfirm() {
             type="button" 
             @click="handleConfirm"
             :disabled="!notes.trim()"
-            class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:bg-rose-300 text-white text-xs font-medium shadow-xs transition-colors"
+            class="min-h-11 rounded-xl bg-[#A43D3D] px-4 text-sm font-bold text-white transition-colors hover:bg-[#843030] disabled:cursor-not-allowed disabled:opacity-40"
           >
             Konfirmasi Penolakan
           </button>

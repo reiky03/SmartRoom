@@ -1,18 +1,16 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import { api } from '../api/client';
 import type { Booking, Room } from '../types';
 import { BookingStatus } from '../types';
 import { addToast } from '../stores/auth';
-import { 
-  Search, 
-  Calendar, 
-  Filter, 
-  RotateCcw, 
-  Copy, 
-  Check, 
-  CalendarX,
-  Clock
+import {
+  Search,
+  RotateCcw,
+  Copy,
+  Check,
+  ArrowLeft,
+  FileSpreadsheet
 } from 'lucide-vue-next';
 
 const bookings = ref<Booking[]>([]);
@@ -20,7 +18,7 @@ const rooms = ref<Room[]>([]);
 const isLoading = ref(true);
 
 const filterRoomId = ref<number | ''>('');
-const filterStatus = ref<number | ''>('');
+const filterStatus = ref<number | ''>(0); // Default to Pending (0) or all
 const filterDate = ref('');
 const searchQuery = ref('');
 const copiedRef = ref<string | null>(null);
@@ -62,7 +60,20 @@ function resetFilter() {
   filterStatus.value = '';
   filterDate.value = '';
   searchQuery.value = '';
+  loadBookings();
 }
+
+const filteredBookings = computed(() => {
+  if (!searchQuery.value) return bookings.value;
+  const q = searchQuery.value.toLowerCase();
+  return bookings.value.filter(b =>
+    b.bookingReference.toLowerCase().includes(q) ||
+    b.borrowerName.toLowerCase().includes(q) ||
+    b.borrowerEmail.toLowerCase().includes(q) ||
+    (b.room?.name || '').toLowerCase().includes(q) ||
+    b.purpose.toLowerCase().includes(q)
+  );
+});
 
 function copyRef(refCode: string) {
   navigator.clipboard.writeText(refCode);
@@ -72,204 +83,232 @@ function copyRef(refCode: string) {
     if (copiedRef.value === refCode) copiedRef.value = null;
   }, 2000);
 }
+
+function formatDate(iso: string) {
+  return new Intl.DateTimeFormat('id-ID', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  }).format(new Date(iso));
+}
+
+function formatTime(iso: string) {
+  return new Intl.DateTimeFormat('id-ID', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  }).format(new Date(iso));
+}
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-8">
 
-    <!-- Header Section -->
-    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-zinc-200/80">
-      <div>
-        <div class="flex items-center gap-2 mb-1.5">
-          <span class="text-[11px] font-mono text-zinc-400 uppercase tracking-wider font-semibold">Audit Trail &amp; Log Kampus</span>
-          <span class="text-zinc-300">&bull;</span>
-          <span class="text-xs font-mono text-zinc-500">{{ bookings.length }} Sesi Tercatat</span>
+    <!-- Top Header -->
+    <div class="page-hero flex flex-col justify-between gap-6 p-6 sm:p-9 md:flex-row md:items-end lg:p-10">
+      <div class="space-y-2">
+        <div class="page-kicker">
+          <span>Riwayat peminjaman</span>
+          <span class="text-[#596159] font-medium">{{ bookings.length }} sesi tercatat</span>
         </div>
-        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-950">
-          Semua Riwayat Peminjaman Ruangan
+        <h1 class="max-w-[17ch] text-4xl font-medium leading-[0.98] text-[#182019] sm:text-5xl lg:text-6xl">
+          Riwayat setiap penggunaan ruang
         </h1>
-        <p class="text-xs sm:text-sm text-zinc-500 mt-1 max-w-xl">
-          Arsip data peminjaman menyeluruh dari mahasiswa, dosen, dan staf universitas beserta catatan persetujuan.
+        <p class="max-w-2xl text-sm leading-6 text-[#5F675F] sm:text-base">
+          Log historis lengkap peminjaman seluruh ruangan kampus dari civitas akademika, disertai status verifikasi dan catatan resmi administrator.
         </p>
       </div>
 
-      <router-link 
-        to="/admin/dashboard" 
-        class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-xs font-medium text-zinc-700 shadow-xs transition-colors flex-shrink-0"
+      <router-link
+        to="/admin/dashboard"
+        class="halden-btn-secondary relative z-10 inline-flex items-center gap-2 self-start px-4 text-sm md:self-auto"
       >
-        <span>&larr; Kembali ke Dashboard</span>
+        <ArrowLeft class="w-3.5 h-3.5" />
+        <span>Kembali ke Overview</span>
       </router-link>
     </div>
 
-    <!-- Filter Bar Card -->
-    <div class="bg-white border border-zinc-200/80 rounded-2xl p-5 shadow-xs">
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 items-end">
-        <div>
-          <label class="block text-[11px] font-mono uppercase tracking-wider font-semibold text-zinc-600 mb-1.5">Filter Ruangan</label>
-          <select 
-            v-model="filterRoomId" 
-            class="w-full px-3 py-2 rounded-xl bg-zinc-50 border border-zinc-200 text-xs text-zinc-800 focus:bg-white focus:border-zinc-900 focus:outline-none transition-all"
-          >
-            <option value="">— Semua Ruangan —</option>
-            <option v-for="r in rooms" :key="r.id" :value="r.id">
-              {{ r.roomCode }} - {{ r.name }}
-            </option>
-          </select>
-        </div>
+    <!-- Filter Control Bar (Halden Architectural Surface) -->
+    <div class="surface-card grid grid-cols-1 items-end gap-4 p-5 sm:grid-cols-2 lg:grid-cols-4">
 
-        <div>
-          <label class="block text-[11px] font-mono uppercase tracking-wider font-semibold text-zinc-600 mb-1.5">Status Peminjaman</label>
-          <select 
-            v-model="filterStatus" 
-            class="w-full px-3 py-2 rounded-xl bg-zinc-50 border border-zinc-200 text-xs text-zinc-800 focus:bg-white focus:border-zinc-900 focus:outline-none transition-all"
-          >
-            <option value="">— Semua Status —</option>
-            <option :value="BookingStatus.Pending">Menunggu (Pending)</option>
-            <option :value="BookingStatus.Approved">Disetujui (Approved)</option>
-            <option :value="BookingStatus.Rejected">Ditolak (Rejected)</option>
-            <option :value="BookingStatus.Cancelled">Dibatalkan (Cancelled)</option>
-          </select>
-        </div>
+      <!-- Room -->
+      <div>
+        <label for="audit-room" class="mb-2 block text-sm font-semibold text-[#3E473F]">
+          Filter Ruangan
+        </label>
+        <select
+          id="audit-room"
+          name="audit-room"
+          v-model="filterRoomId"
+          class="halden-input w-full px-3.5 py-2.5 text-sm"
+        >
+          <option :value="''">&mdash; Semua Ruangan &mdash;</option>
+          <option v-for="r in rooms" :key="r.id" :value="r.id">
+            {{ r.roomCode }} &bull; {{ r.name }}
+          </option>
+        </select>
+      </div>
 
-        <div>
-          <label class="block text-[11px] font-mono uppercase tracking-wider font-semibold text-zinc-600 mb-1.5">Tanggal Pelaksanaan</label>
-          <input 
-            type="date" 
-            v-model="filterDate" 
-            class="w-full px-3 py-2 rounded-xl bg-zinc-50 border border-zinc-200 text-xs text-zinc-800 focus:bg-white focus:border-zinc-900 focus:outline-none transition-all font-mono"
+      <!-- Status -->
+      <div>
+        <label for="audit-status" class="mb-2 block text-sm font-semibold text-[#3E473F]">
+          Status Peminjaman
+        </label>
+        <select
+          id="audit-status"
+          name="audit-status"
+          v-model="filterStatus"
+          class="halden-input w-full px-3.5 py-2.5 text-sm"
+        >
+          <option :value="''">&mdash; Semua Status &mdash;</option>
+          <option :value="0">Pending (Menunggu)</option>
+          <option :value="1">Approved (Disetujui)</option>
+          <option :value="2">Rejected (Ditolak)</option>
+        </select>
+      </div>
+
+      <!-- Date -->
+      <div>
+        <label for="audit-date" class="mb-2 block text-sm font-semibold text-[#3E473F]">
+          Tanggal Pelaksanaan
+        </label>
+        <input
+          id="audit-date"
+          name="audit-date"
+          type="date"
+          v-model="filterDate"
+          class="halden-input w-full px-3.5 py-2.5 text-sm"
+        />
+      </div>
+
+      <!-- Search & Reset -->
+      <div class="flex items-center gap-2">
+        <div class="relative flex-1">
+          <input
+            id="audit-search"
+            name="audit-search"
+            aria-label="Cari riwayat peminjaman"
+            type="text"
+            v-model="searchQuery"
+            placeholder="Cari kata kunci..."
+            class="halden-input w-full py-2.5 pl-9 pr-3 text-sm placeholder:text-[#8A908A]"
           />
+          <Search class="w-3.5 h-3.5 text-stone-500 absolute left-2.5 top-2.5" aria-hidden="true" />
         </div>
-
-        <div class="flex items-center gap-2">
-          <button 
-            type="button" 
-            @click="loadBookings"
-            class="flex-1 py-2 px-3 rounded-xl bg-zinc-950 hover:bg-zinc-800 text-white text-xs font-medium transition-all active:scale-[0.98] flex items-center justify-center gap-1.5"
-          >
-            <Filter class="w-3.5 h-3.5" />
-            <span>Terapkan</span>
-          </button>
-          <button 
-            type="button" 
-            @click="resetFilter" 
-            class="p-2 rounded-xl border border-zinc-200 hover:bg-zinc-50 text-zinc-600 transition-colors" 
-            title="Reset Filter"
-          >
-            <RotateCcw class="w-3.5 h-3.5" />
-          </button>
-        </div>
+        <button
+          type="button"
+          @click="resetFilter"
+          title="Reset Filter"
+          class="halden-btn-secondary flex h-11 w-11 items-center justify-center text-[#5F675F] hover:text-[#182019]"
+        >
+          <RotateCcw class="w-4 h-4" />
+        </button>
       </div>
     </div>
 
-    <!-- Bookings Table Card -->
-    <div class="bg-white border border-zinc-200/80 rounded-2xl overflow-hidden shadow-xs">
-      <div v-if="bookings.length > 0" class="overflow-x-auto">
+    <!-- Table Container (Halden Architectural Card) -->
+    <div class="surface-card overflow-hidden">
+
+      <div v-if="isLoading" class="p-12 text-center text-xs text-stone-500 font-mono">
+        Memuat arsip log peminjaman...
+      </div>
+
+      <div v-else-if="filteredBookings.length === 0" class="p-12 text-center text-stone-600 space-y-2">
+        <div class="text-base font-serif font-bold text-[#1C1917]">Tidak Ada Catatan Peminjaman Ditemukan</div>
+        <div class="text-xs text-stone-500">Coba ubah kriteria filter atau kata kunci pencarian Anda.</div>
+      </div>
+
+      <div v-else class="overflow-x-auto">
         <table class="w-full text-left border-collapse text-xs">
           <thead>
-            <tr class="bg-zinc-50/75 border-b border-zinc-200/80 text-[11px] font-mono uppercase tracking-wider text-zinc-500">
-              <th class="py-3 px-5">Referensi</th>
-              <th class="py-3 px-5">Ruangan &amp; Gedung</th>
-              <th class="py-3 px-5">Pemohon</th>
-              <th class="py-3 px-5">Agenda / Keperluan</th>
-              <th class="py-3 px-5">Jadwal Penggunaan</th>
-              <th class="py-3 px-5">Status</th>
-              <th class="py-3 px-5">Catatan Admin</th>
+            <tr class="border-b border-[#E5DFD5] bg-[#FAF8F5] text-[10px] font-mono uppercase tracking-wider text-stone-500">
+              <th class="py-3 px-4">No. Referensi</th>
+              <th class="py-3 px-4">Ruangan &amp; Gedung</th>
+              <th class="py-3 px-4">Pemohon</th>
+              <th class="py-3 px-4">Agenda / Keperluan</th>
+              <th class="py-3 px-4">Jadwal Penggunaan</th>
+              <th class="py-3 px-4">Status</th>
+              <th class="py-3 px-4">Catatan Admin</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-zinc-100 text-zinc-700">
-            <tr v-for="b in bookings" :key="b.id" class="hover:bg-zinc-50/70 transition-colors">
+          <tbody class="divide-y divide-[#E5DFD5]">
+            <tr
+              v-for="b in filteredBookings"
+              :key="b.id"
+              class="hover:bg-[#FAF8F5]/80 transition-colors"
+            >
               <!-- Reference -->
-              <td class="py-3.5 px-5 font-mono">
-                <div class="flex items-center gap-1.5">
-                  <span class="font-bold text-zinc-950">{{ b.bookingReference }}</span>
-                  <button 
-                    type="button" 
+              <td class="py-3.5 px-4 font-mono">
+                <div class="flex items-center gap-1.5 font-bold text-[#1C1917]">
+                  <span class="bg-[#F5F2EB] text-[#1C1917] border border-[#E5DFD5] px-2 py-0.5 rounded text-[11px]">{{ b.bookingReference }}</span>
+                  <button
+                    type="button"
+                    :aria-label="`Salin referensi ${b.bookingReference}`"
                     @click="copyRef(b.bookingReference)"
-                    class="text-zinc-400 hover:text-zinc-950 p-0.5 rounded transition-colors"
+                    class="grid min-h-11 min-w-11 place-items-center rounded-lg text-stone-600 hover:bg-[#F1EFE9] hover:text-[#1C1917] transition-colors cursor-pointer"
                   >
-                    <Check v-if="copiedRef === b.bookingReference" class="w-3 h-3 text-[#166534]" />
+                    <Check v-if="copiedRef === b.bookingReference" class="w-3 h-3 text-emerald-600" />
                     <Copy v-else class="w-3 h-3" />
                   </button>
                 </div>
-                <div class="text-[10px] text-zinc-400 font-mono">
-                  {{ new Date(b.createdAt).toLocaleDateString('id-ID') }}
-                </div>
+                <div class="text-[10px] text-stone-600 mt-0.5">{{ formatDate(b.createdAt) }}</div>
               </td>
 
               <!-- Room -->
-              <td class="py-3.5 px-5">
-                <div class="font-semibold text-zinc-950">{{ b.room?.name || 'Ruangan #' + b.roomId }}</div>
-                <div class="text-[11px] font-mono text-zinc-400">
-                  {{ b.room?.roomCode }} &bull; {{ b.room?.building }}
-                </div>
+              <td class="py-3.5 px-4">
+                <div class="font-serif font-bold text-sm text-[#1C1917]">{{ b.room?.name }}</div>
+                <div class="text-[10px] font-mono text-stone-500">{{ b.room?.roomCode }} &bull; {{ b.room?.building }}</div>
               </td>
 
               <!-- Borrower -->
-              <td class="py-3.5 px-5">
-                <div class="font-medium text-zinc-950">{{ b.borrowerName }}</div>
-                <div class="text-[11px] text-zinc-400 font-mono">{{ b.borrowerEmail }}</div>
+              <td class="py-3.5 px-4">
+                <div class="font-semibold text-[#1C1917]">{{ b.borrowerName }}</div>
+                <div class="text-[10px] font-mono text-stone-500">{{ b.borrowerEmail }}</div>
               </td>
 
               <!-- Purpose -->
-              <td class="py-3.5 px-5 max-w-xs truncate" :title="b.purpose">
-                <span class="text-zinc-800">{{ b.purpose }}</span>
+              <td class="py-3.5 px-4 max-w-xs text-stone-600">
+                <div class="truncate" :title="b.purpose">{{ b.purpose }}</div>
               </td>
 
               <!-- Schedule -->
-              <td class="py-3.5 px-5 font-mono">
-                <div class="font-semibold text-zinc-950">
-                  {{ new Date(b.startTime).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) }}
-                </div>
-                <div class="text-[11px] text-zinc-500 mt-0.5">
-                  {{ new Date(b.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }} — 
-                  {{ new Date(b.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}
-                </div>
+              <td class="py-3.5 px-4 font-mono text-[#1C1917]">
+                <div class="font-semibold">{{ formatDate(b.startTime) }}</div>
+                <div class="text-[10px] text-stone-500">{{ formatTime(b.startTime) }} &ndash; {{ formatTime(b.endTime) }} WIB</div>
               </td>
 
               <!-- Status -->
-              <td class="py-3.5 px-5">
-                <span 
-                  v-if="b.status === BookingStatus.Approved"
-                  class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-medium bg-[#EDF3EC] text-[#166534] border border-[#BBF7D0]"
+              <td class="py-3.5 px-4">
+                <span
+                  v-if="b.status === BookingStatus.Pending"
+                  class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-amber-50 text-amber-900 border border-amber-200/80"
                 >
-                  <span class="w-1.5 h-1.5 rounded-full bg-[#166534]"></span> Approved
+                  Pending
                 </span>
-                <span 
-                  v-else-if="b.status === BookingStatus.Pending"
-                  class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-medium bg-[#FEF9C3] text-[#854D0E] border border-[#FEF08A]"
+                <span
+                  v-else-if="b.status === BookingStatus.Approved"
+                  class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-emerald-50 text-emerald-900 border border-emerald-200/80"
                 >
-                  <span class="w-1.5 h-1.5 rounded-full bg-[#854D0E]"></span> Pending
+                  Approved
                 </span>
-                <span 
+                <span
                   v-else-if="b.status === BookingStatus.Rejected"
-                  class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-medium bg-[#FEE2E2] text-[#991B1B] border border-[#FECACA]"
+                  class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-rose-50 text-rose-900 border border-rose-200/80"
                 >
-                  <span class="w-1.5 h-1.5 rounded-full bg-[#991B1B]"></span> Rejected
-                </span>
-                <span 
-                  v-else
-                  class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-medium bg-zinc-100 text-zinc-600 border border-zinc-200"
-                >
-                  Cancelled
+                  Rejected
                 </span>
               </td>
 
               <!-- Admin Notes -->
-              <td class="py-3.5 px-5">
-                <span v-if="b.adminNotes" class="px-2 py-0.5 rounded bg-zinc-100 text-zinc-600 font-mono text-[11px] border border-zinc-200/80">
+              <td class="py-3.5 px-4 text-xs font-mono text-stone-600 max-w-xs">
+                <div v-if="b.adminNotes" class="bg-[#FAF8F5] border border-[#E5DFD5] p-2 rounded text-[11px] truncate" :title="b.adminNotes">
                   {{ b.adminNotes }}
-                </span>
-                <span v-else class="text-zinc-300 font-mono">—</span>
+                </div>
+                <span v-else class="text-stone-300">&mdash;</span>
               </td>
             </tr>
           </tbody>
         </table>
-      </div>
-
-      <div v-else-if="!isLoading" class="py-16 text-center text-zinc-400">
-        <CalendarX class="w-10 h-10 mx-auto mb-2 opacity-30" />
-        <div class="text-sm font-medium text-zinc-700">Tidak Ada Data Peminjaman</div>
-        <div class="text-xs text-zinc-400 mt-0.5">Ubah filter ruangan atau tanggal di atas.</div>
       </div>
     </div>
   </div>

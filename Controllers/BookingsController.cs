@@ -44,6 +44,7 @@ public class BookingsController : Controller
     {
         var activeRooms = await _roomService.GetAllRoomsAsync(isActive: true);
         ViewBag.Rooms = new SelectList(activeRooms, "Id", "Name", roomId);
+        ViewBag.ActiveRoomsList = activeRooms;
 
         var today = DateTime.Today;
         var defaultStart = today.AddHours(9);
@@ -77,6 +78,7 @@ public class BookingsController : Controller
         {
             var activeRooms = await _roomService.GetAllRoomsAsync(isActive: true);
             ViewBag.Rooms = new SelectList(activeRooms, "Id", "Name", dto.RoomId);
+            ViewBag.ActiveRoomsList = activeRooms;
             return View(dto);
         }
 

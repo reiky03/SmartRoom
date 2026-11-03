@@ -4,141 +4,134 @@
     Layout = null;
 }
 <!DOCTYPE html>
-<html lang="id" class="h-full bg-[#FAFAFA]">
+<html lang="id" class="h-full">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Daftar Akun — SmartRoom</title>
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>Daftar Akun — SmartRoom macOS 27</title>
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        body { 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
-            letter-spacing: -0.018em;
-            background-color: #FAFAFA;
-            color: #09090B;
-        }
-        .font-mono { font-family: 'JetBrains Mono', monospace; }
-    </style>
-</head>
-<body class="min-h-full flex items-center justify-center p-4 sm:p-6 antialiased relative overflow-hidden">
 
-    <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div class="absolute -top-32 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-gradient-to-b from-zinc-200/50 via-zinc-100/30 to-transparent blur-3xl opacity-70"></div>
-    </div>
+    <!-- SmartRoom macOS 27 Liquid Glass Design System CSS -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="min-h-full flex items-center justify-center p-4 sm:p-6 antialiased selection:bg-[#007AFF] selection:text-white">
 
     <div class="w-full max-w-lg relative z-10 space-y-6 my-8">
         
         <!-- Brand Header -->
         <div class="text-center space-y-2">
-            <a href="/" class="inline-flex items-center gap-2 group">
-                <div class="w-10 h-10 rounded-xl bg-zinc-900 text-white flex items-center justify-center font-bold text-base shadow-sm group-hover:scale-105 transition-transform duration-200">
+            <a href="/" class="inline-flex items-center gap-2.5 group">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-b from-[#2C2C2E] to-[#1C1C1E] text-white flex items-center justify-center font-bold text-lg shadow-md group-hover:scale-105 transition-transform duration-200">
                     <span class="font-mono">S</span>
                 </div>
             </a>
-            <h1 class="text-2xl font-extrabold tracking-tight text-zinc-950">
+            <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-[#1D1D1F]">
                 Pendaftaran Akun Civitas
             </h1>
-            <p class="text-xs text-zinc-500">
-                Registrasi akun mahasiswa / civitas akademika untuk pengajuan peminjaman ruangan
+            <p class="text-xs text-[#515154]">
+                Registrasi akun mahasiswa / dosen untuk pengajuan peminjaman sarana kampus
             </p>
         </div>
 
-        <!-- Form Card -->
-        <div class="bg-white border border-zinc-200/80 rounded-2xl p-6 sm:p-8 shadow-xs">
+        <!-- Liquid Glass Form Card -->
+        <div class="liquid-glass-elevated p-6 sm:p-8">
             <form asp-action="Register" method="post" class="space-y-4">
                 @Html.AntiForgeryToken()
-                <div asp-validation-summary="ModelOnly" class="p-3 rounded-xl bg-[#FEE2E2] border border-[#FECACA] text-[#991B1B] text-xs"></div>
+                <div asp-validation-summary="ModelOnly" class="p-3.5 rounded-2xl bg-[#FF3B30]/15 border border-[#FF3B30]/30 text-[#C91E14] text-xs font-mono"></div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-[11px] font-mono uppercase tracking-wider font-semibold text-zinc-700 mb-1.5">
-                            Username <span class="text-rose-500">*</span>
+                        <label class="block text-[11px] font-mono uppercase tracking-wider font-semibold text-[#515154] mb-1.5">
+                            Username <span class="text-[#FF3B30]">*</span>
                         </label>
                         <input asp-for="Username" 
-                               class="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 border border-zinc-200 text-zinc-900 placeholder-zinc-400 text-xs focus:bg-white focus:border-zinc-900 focus:outline-none transition-all font-mono"
+                               class="liquid-glass-input w-full px-4 py-2.5 text-xs font-mono"
                                placeholder="reiky123" required />
-                        <span asp-validation-for="Username" class="text-rose-500 text-[10px]"></span>
+                        <span asp-validation-for="Username" class="text-[#FF3B30] text-[10px] font-mono"></span>
                     </div>
 
                     <div>
-                        <label class="block text-[11px] font-mono uppercase tracking-wider font-semibold text-zinc-700 mb-1.5">
-                            Email Kampus <span class="text-rose-500">*</span>
+                        <label class="block text-[11px] font-mono uppercase tracking-wider font-semibold text-[#515154] mb-1.5">
+                            Email Kampus <span class="text-[#FF3B30]">*</span>
                         </label>
                         <input asp-for="Email" type="email" 
-                               class="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 border border-zinc-200 text-zinc-900 placeholder-zinc-400 text-xs focus:bg-white focus:border-zinc-900 focus:outline-none transition-all font-mono"
+                               class="liquid-glass-input w-full px-4 py-2.5 text-xs font-mono"
                                placeholder="nama@students.ac.id" required />
-                        <span asp-validation-for="Email" class="text-rose-500 text-[10px]"></span>
+                        <span asp-validation-for="Email" class="text-[#FF3B30] text-[10px] font-mono"></span>
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-[11px] font-mono uppercase tracking-wider font-semibold text-zinc-700 mb-1.5">
-                        Nama Lengkap <span class="text-rose-500">*</span>
+                    <label class="block text-[11px] font-mono uppercase tracking-wider font-semibold text-[#515154] mb-1.5">
+                        Nama Lengkap <span class="text-[#FF3B30]">*</span>
                     </label>
                     <input asp-for="FullName" 
-                           class="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 border border-zinc-200 text-zinc-900 placeholder-zinc-400 text-xs focus:bg-white focus:border-zinc-900 focus:outline-none transition-all"
+                           class="liquid-glass-input w-full px-4 py-2.5 text-xs"
                            placeholder="Nama Lengkap Civitas" required />
-                    <span asp-validation-for="FullName" class="text-rose-500 text-[10px]"></span>
+                    <span asp-validation-for="FullName" class="text-[#FF3B30] text-[10px] font-mono"></span>
                 </div>
 
                 <div>
-                    <label class="block text-[11px] font-mono uppercase tracking-wider font-semibold text-zinc-700 mb-1.5">
-                        Jurusan / Program Studi / Unit <span class="text-rose-500">*</span>
+                    <label class="block text-[11px] font-mono uppercase tracking-wider font-semibold text-[#515154] mb-1.5">
+                        Jurusan / Program Studi / Unit <span class="text-[#FF3B30]">*</span>
                     </label>
                     <input asp-for="Department" 
-                           class="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 border border-zinc-200 text-zinc-900 placeholder-zinc-400 text-xs focus:bg-white focus:border-zinc-900 focus:outline-none transition-all"
+                           class="liquid-glass-input w-full px-4 py-2.5 text-xs"
                            placeholder="Teknik Informatika / BEM FTI / Dosen" required />
-                    <span asp-validation-for="Department" class="text-rose-500 text-[10px]"></span>
+                    <span asp-validation-for="Department" class="text-[#FF3B30] text-[10px] font-mono"></span>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-[11px] font-mono uppercase tracking-wider font-semibold text-zinc-700 mb-1.5">
-                            Kata Sandi <span class="text-rose-500">*</span>
+                        <label class="block text-[11px] font-mono uppercase tracking-wider font-semibold text-[#515154] mb-1.5">
+                            Kata Sandi <span class="text-[#FF3B30]">*</span>
                         </label>
                         <input asp-for="Password" type="password" 
-                               class="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 border border-zinc-200 text-zinc-900 placeholder-zinc-400 text-xs focus:bg-white focus:border-zinc-900 focus:outline-none transition-all font-mono"
+                               class="liquid-glass-input w-full px-4 py-2.5 text-xs font-mono"
                                placeholder="••••••••" required />
-                        <span asp-validation-for="Password" class="text-rose-500 text-[10px]"></span>
+                        <span asp-validation-for="Password" class="text-[#FF3B30] text-[10px] font-mono"></span>
                     </div>
 
                     <div>
-                        <label class="block text-[11px] font-mono uppercase tracking-wider font-semibold text-zinc-700 mb-1.5">
-                            Konfirmasi Sandi <span class="text-rose-500">*</span>
+                        <label class="block text-[11px] font-mono uppercase tracking-wider font-semibold text-[#515154] mb-1.5">
+                            Konfirmasi Sandi <span class="text-[#FF3B30]">*</span>
                         </label>
                         <input asp-for="ConfirmPassword" type="password" 
-                               class="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 border border-zinc-200 text-zinc-900 placeholder-zinc-400 text-xs focus:bg-white focus:border-zinc-900 focus:outline-none transition-all font-mono"
+                               class="liquid-glass-input w-full px-4 py-2.5 text-xs font-mono"
                                placeholder="••••••••" required />
-                        <span asp-validation-for="ConfirmPassword" class="text-rose-500 text-[10px]"></span>
+                        <span asp-validation-for="ConfirmPassword" class="text-[#FF3B30] text-[10px] font-mono"></span>
                     </div>
-                </div>
-
-                <div class="p-3.5 rounded-xl bg-zinc-50 border border-zinc-200/80 text-[11px] text-zinc-500 leading-relaxed">
-                    Akun baru otomatis diberikan peran <strong>Mahasiswa (Student)</strong> yang dapat mengajukan peminjaman seluruh ruangan aktif secara mandiri.
                 </div>
 
                 <button type="submit" 
-                        class="w-full py-2.5 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-medium text-xs shadow-xs transition-all active:scale-[0.98] flex items-center justify-center gap-2 mt-2">
-                    <i data-lucide="user-check" class="w-4 h-4"></i>
-                    <span>Daftar Akun Civitas</span>
+                        class="liquid-btn-primary w-full py-2.5 justify-center mt-3">
+                    <i data-lucide="user-plus" class="w-4 h-4 text-white"></i>
+                    <span>Daftarkan Akun Sekarang</span>
                 </button>
             </form>
 
-            <div class="mt-4 pt-4 border-t border-zinc-100 text-center">
-                <span class="text-xs text-zinc-500">Sudah memiliki akun?</span>
-                <a asp-action="Login" class="text-xs font-semibold text-zinc-900 hover:underline ml-1">
+            <div class="mt-5 pt-4 border-t border-black/[0.05] text-center">
+                <span class="text-xs text-[#515154]">Sudah memiliki akun terdaftar?</span>
+                <a asp-action="Login" class="text-xs font-semibold text-[#007AFF] hover:underline ml-1">
                     Masuk di sini
                 </a>
             </div>
         </div>
+
+        <div class="text-center">
+            <a href="/" class="text-xs font-mono text-[#86868B] hover:text-[#1D1D1F] transition-colors inline-flex items-center gap-1.5">
+                <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+                <span>Kembali ke Halaman Utama</span>
+            </a>
+        </div>
     </div>
 
+    <!-- Scripts -->
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             if (window.lucide) {
