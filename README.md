@@ -21,13 +21,13 @@ SmartRoom hadir untuk menyelesaikan masalah di atas dengan memberikan informasi 
 
 Aplikasi ini memiliki dua peran utama:
 
-### 1. Mahasiswa / Civitas Akademika
-Sebagai peminjam ruangan, mahasiswa dapat:
+### 1. Mahasiswa, Dosen, & Staff (Civitas Akademika)
+Sebagai pihak peminjam ruangan, civitas akademika (baik mahasiswa untuk kegiatan organisasi/akademik, maupun dosen dan staf untuk kuliah pengganti, seminar, atau rapat kerja) memiliki akses yang sama untuk:
 - **Melihat Katalog Ruangan:** Menjelajahi daftar ruangan yang tersedia lengkap dengan foto, kapasitas kursi, dan fasilitas resmi (seperti proyektor, AC, sound system).
 - **Mengecek Status Ruangan:** Mengetahui secara langsung apakah ruangan sedang digunakan pada jam tertentu atau bebas seharian.
 - **Mengajukan Peminjaman:** Mengisi formulir peminjaman dengan memilih tanggal, jam mulai, jam selesai, dan tujuan kegiatan.
 - **Pencegahan Jadwal Bentrok Otomatis:** Sistem akan langsung memeriksa apakah jam yang dipilih sudah dipesan orang lain. Jika bentrok, sistem akan memberi peringatan dan mencegah formulir dikirim.
-- **Melihat Riwayat & Tiket E-Pass:** Memantau apakah pengajuan masih menunggu review, disetujui, atau ditolak. Jika disetujui, mahasiswa mendapatkan tiket digital (*E-Pass*) yang memiliki kode booking unik dan QR Code untuk ditunjukkan kepada petugas di lokasi.
+- **Melihat Riwayat & Tiket E-Pass:** Memantau apakah pengajuan masih menunggu review, disetujui, atau ditolak. Jika disetujui, pemohon mendapatkan tiket digital (*E-Pass*) yang memiliki kode booking unik dan QR Code untuk ditunjukkan kepada petugas di lokasi.
 
 ### 2. Administrator Fasilitas Kampus
 Sebagai pengelola ruangan, admin memiliki akses ke:
@@ -40,12 +40,12 @@ Sebagai pengelola ruangan, admin memiliki akses ke:
 
 ## Tampilan Aplikasi
 
-### 1. Katalog Ruangan (Halaman Mahasiswa)
-Mahasiswa bisa memfilter ruangan berdasarkan kapasitas dan mencari berdasarkan nama gedung atau fasilitas yang dibutuhkan.
+### 1. Katalog Ruangan (Halaman Civitas: Mahasiswa & Dosen)
+Civitas akademika bisa memfilter ruangan berdasarkan kapasitas dan mencari berdasarkan nama gedung atau fasilitas yang dibutuhkan.
 ![Katalog Ruangan](docs/screenshots/01-portal-civitas-katalog.png)
 
 ### 2. Riwayat Peminjaman & Tiket E-Pass
-Daftar pengajuan peminjaman mahasiswa. Jika disetujui, tombol E-Pass akan aktif dan bisa dibuka sebagai tiket masuk resmi.
+Daftar pengajuan peminjaman oleh pemohon. Jika disetujui, tombol E-Pass akan aktif dan bisa dibuka sebagai tiket masuk resmi.
 ![Riwayat Peminjaman dan E-Pass](docs/screenshots/02-portal-civitas-peminjaman-epass.png)
 
 ### 3. Dashboard Admin & Matriks Okupansi
