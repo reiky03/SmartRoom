@@ -6,14 +6,13 @@ import { api } from '../api/client';
 import { BookingStatus } from '../types';
 import {
   Plus,
-  ExternalLink,
   ChevronDown,
   Menu,
   X,
-  Terminal,
   LogOut,
   ShieldCheck,
   GraduationCap,
+  AlertTriangle,
 } from 'lucide-vue-next';
 
 const emit = defineEmits<{
@@ -24,6 +23,7 @@ const route = useRoute();
 const router = useRouter();
 const mobileOpen = ref(false);
 const profileDropdownOpen = ref(false);
+const isLogoutConfirmOpen = ref(false);
 const pendingApprovalCount = ref(0);
 const studentBookingsCount = ref(0);
 
@@ -54,10 +54,15 @@ async function loadCounts() {
   }
 }
 
-function handleLogout() {
-  logout();
+function promptLogout() {
   profileDropdownOpen.value = false;
   mobileOpen.value = false;
+  isLogoutConfirmOpen.value = true;
+}
+
+function confirmLogout() {
+  isLogoutConfirmOpen.value = false;
+  logout();
   router.push('/login');
 }
 
@@ -257,12 +262,13 @@ function handleStudentNav(target: 'catalog' | 'bookings') {
                   </div>
                 </div>
 
-                <div class="space-y-1 border-t border-[#D9D8D1] pt-3">
-                  <a href="/swagger" target="_blank" class="flex min-h-11 items-center justify-between rounded-xl px-3 text-sm font-semibold text-[#5F675F] hover:bg-[#F5F3ED] hover:text-[#182019]">
-                    <span class="flex items-center gap-2"><Terminal class="h-4 w-4" aria-hidden="true" /> Dokumentasi API</span>
-                    <ExternalLink class="h-3.5 w-3.5" aria-hidden="true" />
-                  </a>
-                  <button type="button" @click="handleLogout" class="flex min-h-11 w-full items-center gap-2 rounded-xl px-3 text-sm font-semibold text-[#A43D3D] hover:bg-[#F7E8E6]">
+                <div class="border-t border-[#D9D8D1] pt-2">
+                  <button
+                    id="profile-logout-btn"
+                    type="button"
+                    @click="promptLogout"
+                    class="flex min-h-11 w-full items-center gap-2 rounded-xl px-3 text-sm font-semibold text-[#A43D3D] hover:bg-[#F7E8E6] transition-colors cursor-pointer"
+                  >
                     <LogOut class="h-4 w-4" aria-hidden="true" /> Keluar akun
                   </button>
                 </div>
@@ -306,5 +312,53 @@ function handleStudentNav(target: 'catalog' | 'bookings') {
         </nav>
       </transition>
     </div>
+
+    <!-- Modal Konfirmasi Logout Interaktif -->
+    <Teleport to="body">
+      <div
+        v-if="isLogoutConfirmOpen"
+        id="logout-confirm-modal"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#182019]/45 backdrop-blur-sm"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="logout-dialog-title"
+      >
+        <transition name="modal-fade" appear>
+          <div class="relative w-full max-w-sm rounded-[24px] bg-[#FBFAF7] border border-[#D9D8D1] shadow-2xl p-6 space-y-4 text-[#182019]">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-[#FEE2E2] border border-[#FECACA] text-[#991B1B] flex items-center justify-center shadow-xs">
+                <LogOut class="w-5 h-5" />
+              </div>
+              <div>
+                <p class="text-[10px] font-mono uppercase tracking-widest text-[#991B1B] font-bold">Konfirmasi Keluar</p>
+                <h3 id="logout-dialog-title" class="font-serif text-lg font-bold text-[#182019]">Akhiri Sesi Kerja?</h3>
+              </div>
+            </div>
+
+            <p class="text-xs text-[#5F675F] leading-relaxed">
+              Apakah Anda yakin ingin keluar dari sesi kerja sebagai <strong>{{ currentUser?.fullName }}</strong> ({{ currentUser?.role === 'Admin' ? 'Administrator Fasilitas' : 'Civitas Akademika' }})?
+            </p>
+
+            <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-[#D9D8D1]">
+              <button
+                type="button"
+                @click="isLogoutConfirmOpen = false"
+                class="px-4 py-2 rounded-xl halden-btn-secondary text-xs font-semibold cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                id="confirm-logout-btn"
+                type="button"
+                @click="confirmLogout"
+                class="px-4 py-2 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-semibold shadow-xs transition-all active:scale-95 cursor-pointer"
+              >
+                Ya, Keluar Akun
+              </button>
+            </div>
+          </div>
+        </transition>
+      </div>
+    </Teleport>
   </header>
 </template>

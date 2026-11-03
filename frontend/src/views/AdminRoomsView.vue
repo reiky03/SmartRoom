@@ -28,6 +28,11 @@ const isEditing = ref(false);
 const editingId = ref<number | null>(null);
 const modalLoading = ref(false);
 
+// Confirmation toggle state
+const confirmToggleRoom = ref<Room | null>(null);
+const isConfirmToggleOpen = ref(false);
+const toggleLoading = ref(false);
+
 const formRoomCode = ref('');
 const formName = ref('');
 const formBuilding = ref('');
@@ -106,15 +111,27 @@ function openEditModal(room: Room) {
   isModalOpen.value = true;
 }
 
-async function handleToggleStatus(room: Room) {
+function promptToggleStatus(room: Room) {
+  confirmToggleRoom.value = room;
+  isConfirmToggleOpen.value = true;
+}
+
+async function executeToggleStatus() {
+  if (!confirmToggleRoom.value) return;
+  const room = confirmToggleRoom.value;
+  toggleLoading.value = true;
   try {
     const nextIsActive = !room.isActive;
     await api.toggleRoomStatus(room.id);
     room.isActive = nextIsActive;
-    const msg = nextIsActive ? `Ruangan ${room.roomCode} diaktifkan!` : `Ruangan ${room.roomCode} dinonaktifkan!`;
+    const msg = nextIsActive ? `Ruangan ${room.roomCode} berhasil diaktifkan kembali!` : `Ruangan ${room.roomCode} telah dinonaktifkan dari katalog.`;
     addToast(msg, nextIsActive ? 'success' : 'info');
+    isConfirmToggleOpen.value = false;
+    confirmToggleRoom.value = null;
   } catch (e: any) {
     addToast('Gagal mengubah status: ' + e.message, 'error');
+  } finally {
+    toggleLoading.value = false;
   }
 }
 
@@ -310,9 +327,10 @@ async function handleSaveRoom() {
           </button>
 
           <button
+            :id="'toggle-room-' + r.id + '-btn'"
             type="button"
-            @click="handleToggleStatus(r)"
-            class="px-3.5 py-1.5 rounded-lg text-xs font-mono font-semibold border transition-all flex items-center gap-1.5 cursor-pointer"
+            @click="promptToggleStatus(r)"
+            class="px-3.5 py-1.5 rounded-lg text-xs font-mono font-semibold border transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
             :class="r.isActive
               ? 'text-[#991B1B] bg-[#FEE2E2] border-[#FECACA] hover:bg-[#FCA5A5]'
               : 'text-[#166534] bg-[#DCFCE7] border-[#BBF7D0] hover:bg-[#86EFAC]'"
@@ -324,118 +342,220 @@ async function handleSaveRoom() {
       </div>
     </div>
 
-    <!-- Create/Edit Room Halden Modal Sheet -->
-    <div v-if="isModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm">
-      <transition name="modal-fade" appear>
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="room-modal-title"
-          class="floating-surface max-w-lg w-full p-6 text-xs relative space-y-4"
-        >
-          <div class="flex items-center justify-between pb-3 border-b border-[#E5DFD5]">
-            <div>
-              <span class="text-[10px] font-mono tracking-widest uppercase text-[#78716C] font-semibold">INVENTORY SPECIFICATION</span>
-              <h3 id="room-modal-title" class="font-serif text-xl font-bold text-[#1C1917] mt-0.5">
-                {{ isEditing ? 'Edit Spesifikasi Ruangan' : 'Tambah Ruangan Baru' }}
-              </h3>
+    <!-- Create/Edit Room Halden Modal Sheet (Refined Squircle with Zero Gaps) -->
+    <Teleport to="body">
+      <div
+        v-if="isModalOpen"
+        id="room-form-modal"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#182019]/45 backdrop-blur-sm overflow-y-auto"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="room-modal-title"
+      >
+        <transition name="modal-fade" appear>
+          <div
+            class="relative w-full max-w-lg rounded-[24px] bg-[#FBFAF7] border border-[#D9D8D1] shadow-2xl p-6 sm:p-7 space-y-5 text-[#182019] my-auto"
+          >
+            <!-- Header with Squircle Icon Box -->
+            <div class="flex items-center justify-between pb-4 border-b border-[#D9D8D1]">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-[#214C38] text-white flex items-center justify-center shadow-xs">
+                  <DoorClosed class="w-5 h-5" />
+                </div>
+                <div>
+                  <span class="text-[10px] font-mono tracking-widest uppercase text-[#A45F35] font-bold">
+                    Spesifikasi Fasilitas
+                  </span>
+                  <h3 id="room-modal-title" class="font-serif text-xl font-bold text-[#182019] mt-0.5">
+                    {{ isEditing ? 'Edit Spesifikasi Ruangan' : 'Tambah Ruangan Baru' }}
+                  </h3>
+                </div>
+              </div>
+              <button
+                type="button"
+                aria-label="Tutup dialog"
+                @click="isModalOpen = false"
+                class="w-9 h-9 rounded-xl bg-white border border-[#D9D8D1] hover:bg-[#F1EFE9] flex items-center justify-center text-[#5F675F] hover:text-[#182019] transition-colors cursor-pointer"
+              >
+                <X class="w-4 h-4" />
+              </button>
             </div>
-            <button type="button" aria-label="Tutup dialog" @click="isModalOpen = false" class="min-h-11 min-w-11 grid place-items-center rounded-full text-[#78716C] hover:text-[#1C1917] hover:bg-[#EAE4D9] transition-colors cursor-pointer">
-              <X class="w-4 h-4" />
-            </button>
-          </div>
 
-          <div class="space-y-3.5 font-sans">
-            <div class="grid grid-cols-2 gap-3">
+            <!-- Form Content -->
+            <div class="space-y-4 font-sans text-xs">
+              <div class="grid grid-cols-2 gap-3.5">
+                <div>
+                  <label for="room-code" class="block font-semibold text-[#3E473F] mb-1.5">
+                    Kode Ruangan <span class="text-[#991B1B]">*</span>
+                  </label>
+                  <input
+                    id="room-code"
+                    name="room-code"
+                    type="text"
+                    v-model="formRoomCode"
+                    class="w-full px-3.5 py-2.5 rounded-xl border border-[#D9D8D1] bg-white text-xs font-mono focus:border-[#214C38] focus:ring-1 focus:ring-[#214C38] outline-hidden transition-all shadow-xs"
+                  />
+                </div>
+                <div>
+                  <label for="room-capacity" class="block font-semibold text-[#3E473F] mb-1.5">
+                    Kapasitas (Kursi) <span class="text-[#991B1B]">*</span>
+                  </label>
+                  <input
+                    id="room-capacity"
+                    name="room-capacity"
+                    type="number"
+                    v-model="formCapacity"
+                    class="w-full px-3.5 py-2.5 rounded-xl border border-[#D9D8D1] bg-white text-xs font-mono focus:border-[#214C38] focus:ring-1 focus:ring-[#214C38] outline-hidden transition-all shadow-xs"
+                  />
+                </div>
+              </div>
+
               <div>
-                <label for="room-code" class="block text-[10px] font-mono uppercase tracking-wider text-[#57534E] font-semibold mb-1">
-                  Kode Ruangan <span class="text-[#B91C1C]">*</span>
+                <label for="room-name" class="block font-semibold text-[#3E473F] mb-1.5">
+                  Nama Ruangan <span class="text-[#991B1B]">*</span>
                 </label>
                 <input
-                  id="room-code"
-                  name="room-code"
+                  id="room-name"
+                  name="room-name"
                   type="text"
-                  v-model="formRoomCode"
-                  class="w-full px-3 py-2 halden-input text-xs font-mono"
+                  v-model="formName"
+                  placeholder="Contoh: Lab Komputer Riset A"
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-[#D9D8D1] bg-white text-xs placeholder:text-[#A8A29E] focus:border-[#214C38] focus:ring-1 focus:ring-[#214C38] outline-hidden transition-all shadow-xs"
                 />
               </div>
+
               <div>
-                <label for="room-capacity" class="block text-[10px] font-mono uppercase tracking-wider text-[#57534E] font-semibold mb-1">
-                  Kapasitas (Kursi) <span class="text-[#B91C1C]">*</span>
+                <label for="room-building" class="block font-semibold text-[#3E473F] mb-1.5">
+                  Lokasi / Gedung <span class="text-[#991B1B]">*</span>
                 </label>
                 <input
-                  id="room-capacity"
-                  name="room-capacity"
-                  type="number"
-                  v-model="formCapacity"
-                  class="w-full px-3 py-2 halden-input text-xs font-mono"
+                  id="room-building"
+                  name="room-building"
+                  type="text"
+                  v-model="formBuilding"
+                  placeholder="Contoh: Gedung Fakultas TI Lt. 2"
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-[#D9D8D1] bg-white text-xs placeholder:text-[#A8A29E] focus:border-[#214C38] focus:ring-1 focus:ring-[#214C38] outline-hidden transition-all shadow-xs"
+                />
+              </div>
+
+              <div>
+                <label for="room-facilities" class="block font-semibold text-[#3E473F] mb-1.5">
+                  Fasilitas (Pisahkan dengan koma)
+                </label>
+                <input
+                  id="room-facilities"
+                  name="room-facilities"
+                  type="text"
+                  v-model="formFacilities"
+                  placeholder="Proyektor, AC, Smart TV, Whiteboard"
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-[#D9D8D1] bg-white text-xs placeholder:text-[#A8A29E] focus:border-[#214C38] focus:ring-1 focus:ring-[#214C38] outline-hidden transition-all shadow-xs"
                 />
               </div>
             </div>
 
-            <div>
-              <label for="room-name" class="block text-[10px] font-mono uppercase tracking-wider text-[#57534E] font-semibold mb-1">
-                Nama Ruangan <span class="text-[#B91C1C]">*</span>
-              </label>
-              <input
-                id="room-name"
-                name="room-name"
-                type="text"
-                v-model="formName"
-                placeholder="Contoh: Lab Komputer Riset A"
-                class="w-full px-3 py-2 halden-input text-xs placeholder:text-[#A8A29E]"
-              />
-            </div>
-
-            <div>
-              <label for="room-building" class="block text-[10px] font-mono uppercase tracking-wider text-[#57534E] font-semibold mb-1">
-                Lokasi / Gedung <span class="text-[#B91C1C]">*</span>
-              </label>
-              <input
-                id="room-building"
-                name="room-building"
-                type="text"
-                v-model="formBuilding"
-                placeholder="Contoh: Gedung Fakultas TI Lt. 2"
-                class="w-full px-3 py-2 halden-input text-xs placeholder:text-[#A8A29E]"
-              />
-            </div>
-
-            <div>
-              <label for="room-facilities" class="block text-[10px] font-mono uppercase tracking-wider text-[#57534E] font-semibold mb-1">
-                Fasilitas (Pisahkan dengan koma)
-              </label>
-              <input
-                id="room-facilities"
-                name="room-facilities"
-                type="text"
-                v-model="formFacilities"
-                placeholder="Proyektor, AC, Smart TV, Whiteboard"
-                class="w-full px-3 py-2 halden-input text-xs placeholder:text-[#A8A29E]"
-              />
+            <!-- Footer Buttons -->
+            <div class="flex items-center justify-end gap-2.5 pt-4 border-t border-[#D9D8D1]">
+              <button
+                type="button"
+                @click="isModalOpen = false"
+                class="px-5 py-2.5 rounded-xl halden-btn-secondary text-xs font-semibold cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                @click="handleSaveRoom"
+                :disabled="modalLoading"
+                class="px-6 py-2.5 rounded-xl halden-btn-primary text-xs font-semibold flex items-center gap-1.5 cursor-pointer disabled:opacity-50 active:scale-95 transition-all"
+              >
+                <Loader2 v-if="modalLoading" class="w-3.5 h-3.5 animate-spin" />
+                <span>{{ modalLoading ? 'Menyimpan...' : 'Simpan Ruangan' }}</span>
+              </button>
             </div>
           </div>
+        </transition>
+      </div>
+    </Teleport>
 
-          <div class="flex items-center justify-end gap-2.5 pt-4 border-t border-[#E5DFD5]">
-            <button
-              type="button"
-              @click="isModalOpen = false"
-              class="px-4 py-2 rounded-lg halden-btn-secondary text-xs cursor-pointer"
-            >
-              Batal
-            </button>
-            <button
-              type="button"
-              @click="handleSaveRoom"
-              :disabled="modalLoading"
-              class="px-5 py-2 rounded-lg halden-btn-primary text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-            >
-              <Loader2 v-if="modalLoading" class="w-3.5 h-3.5 animate-spin" />
-              <span>{{ modalLoading ? 'Menyimpan...' : 'Simpan Ruangan' }}</span>
-            </button>
+    <!-- Modal Konfirmasi Status Ruangan (Nonaktifkan / Aktifkan) -->
+    <Teleport to="body">
+      <div
+        v-if="isConfirmToggleOpen && confirmToggleRoom"
+        id="toggle-room-confirm-modal"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#182019]/45 backdrop-blur-sm"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="toggle-dialog-title"
+      >
+        <transition name="modal-fade" appear>
+          <div class="relative w-full max-w-md rounded-[24px] bg-[#FBFAF7] border border-[#D9D8D1] shadow-2xl p-6 sm:p-7 space-y-4 text-[#182019]">
+            <div class="flex items-center gap-3">
+              <div
+                class="w-10 h-10 rounded-xl flex items-center justify-center shadow-xs border"
+                :class="confirmToggleRoom.isActive
+                  ? 'bg-[#FEE2E2] border-[#FECACA] text-[#991B1B]'
+                  : 'bg-[#DCFCE7] border-[#BBF7D0] text-[#166534]'"
+              >
+                <AlertTriangle v-if="confirmToggleRoom.isActive" class="w-5 h-5" />
+                <CheckCircle2 v-else class="w-5 h-5" />
+              </div>
+              <div>
+                <p
+                  class="text-[10px] font-mono uppercase tracking-widest font-bold"
+                  :class="confirmToggleRoom.isActive ? 'text-[#991B1B]' : 'text-[#166534]'"
+                >
+                  {{ confirmToggleRoom.isActive ? 'Konfirmasi Nonaktifkan' : 'Konfirmasi Aktifkan' }}
+                </p>
+                <h3 id="toggle-dialog-title" class="font-serif text-lg font-bold text-[#182019]">
+                  {{ confirmToggleRoom.isActive ? 'Nonaktifkan Ruangan?' : 'Aktifkan Ruangan Kembali?' }}
+                </h3>
+              </div>
+            </div>
+
+            <div class="p-3.5 rounded-xl bg-white border border-[#D9D8D1] text-xs space-y-1">
+              <div class="font-bold text-[#182019] text-sm">{{ confirmToggleRoom.name }}</div>
+              <div class="font-mono text-[#5F675F] text-[11px]">{{ confirmToggleRoom.roomCode }} &bull; {{ confirmToggleRoom.building }}</div>
+            </div>
+
+            <p class="text-xs text-[#5F675F] leading-relaxed">
+              <template v-if="confirmToggleRoom.isActive">
+                Ruangan ini akan <strong>disembunyikan dari katalog peminjaman civitas</strong>. Jadwal yang telah disetujui sebelumnya tetap aman dan tercatat di riwayat.
+              </template>
+              <template v-else>
+                Ruangan ini akan <strong>kembali tersedia di katalog</strong> dan civitas akademika dapat mengajukan jadwal peminjaman baru.
+              </template>
+            </p>
+
+            <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-[#D9D8D1]">
+              <button
+                type="button"
+                @click="isConfirmToggleOpen = false"
+                :disabled="toggleLoading"
+                class="px-4 py-2.5 rounded-xl halden-btn-secondary text-xs font-semibold cursor-pointer disabled:opacity-50"
+              >
+                Batal
+              </button>
+              <button
+                id="execute-toggle-room-btn"
+                type="button"
+                @click="executeToggleStatus"
+                :disabled="toggleLoading"
+                class="px-5 py-2.5 rounded-xl text-xs font-semibold shadow-xs transition-all active:scale-95 cursor-pointer flex items-center gap-1.5 text-white disabled:opacity-50"
+                :class="confirmToggleRoom.isActive
+                  ? 'bg-[#991B1B] hover:bg-[#7F1D1D]'
+                  : 'bg-[#214C38] hover:bg-[#18392A]'"
+              >
+                <Loader2 v-if="toggleLoading" class="w-3.5 h-3.5 animate-spin" />
+                <span>
+                  {{ toggleLoading
+                    ? 'Memproses...'
+                    : (confirmToggleRoom.isActive ? 'Ya, Nonaktifkan Ruangan' : 'Ya, Aktifkan Ruangan') }}
+                </span>
+              </button>
+            </div>
           </div>
-        </div>
-      </transition>
-    </div>
+        </transition>
+      </div>
+    </Teleport>
   </div>
 </template>
