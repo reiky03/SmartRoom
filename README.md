@@ -34,7 +34,8 @@ Sebagai pengelola ruangan, admin memiliki akses ke:
 - **Meja Operasi & Statistik:** Melihat ringkasan data harian seperti jumlah ruangan aktif, agenda yang berlangsung hari ini, serta jumlah pengajuan yang menunggu keputusan.
 - **Matriks Jadwal Harian (Timeline):** Melihat jadwal pemakaian seluruh ruangan dalam bentuk matriks waktu (pukul 08:00 sampai 18:00 WIB). Admin juga bisa menyesuaikan rentang jam operasional jika jam kerja kampus berubah.
 - **Persetujuan Peminjaman:** Menyetujui permohonan yang masuk atau menolaknya dengan menyertakan catatan alasan resmi agar pemohon tahu kenapa permohonannya ditolak.
-- **Manajemen Ruangan:** Menambah data ruangan baru, mengubah spesifikasi (kapasitas/fasilitas), atau menonaktifkan ruangan sementara jika ruangan sedang dalam renovasi atau perbaikan.
+- **Manajemen Ruangan & Foto:** Menambah data ruangan baru lengkap dengan upload foto ruangan (berkas gambar atau link URL), mengedit spesifikasi, menonaktifkan ruangan sementara, atau menghapus ruangan permanen jika sudah tidak terpakai lagi.
+- **Kelola Pengguna & Civitas:** Membuat akun baru untuk mahasiswa, dosen, staf, maupun sesama administrator dengan hak akses (role) yang teratur, serta opsi untuk mengubah data profil dan mereset kata sandi.
 
 ---
 
@@ -55,6 +56,14 @@ Admin bisa memantau jadwal penggunaan semua ruangan hari ini dalam satu layar.
 ### 4. Matriks Jadwal Harian Penuh (08:00 - 18:00 WIB)
 Tampilan timeline jadwal ruangan yang rapi dari jam buka sampai jam tutup operasional kampus.
 ![Matriks Jadwal Penuh](docs/screenshots/04-admin-matriks-okupansi-full.png)
+
+### 5. Manajemen Ruangan (Edit, Hapus, & Upload Foto)
+Admin dapat mengelola inventaris ruangan, mengunggah foto ruangan baru, mengubah spesifikasi, menonaktifkan ruangan, atau menghapus ruangan jika sudah tidak digunakan.
+![Manajemen Ruangan](docs/screenshots/05-admin-manajemen-ruangan.png)
+
+### 6. Kelola Pengguna & Civitas (Hak Akses Multi-Peran)
+Admin dapat membuatkan akun baru untuk civitas kampus (Mahasiswa, Dosen & Staf, Administrator), memfilter berdasarkan peran, mengedit data profil, dan mereset kata sandi.
+![Kelola Pengguna](docs/screenshots/06-admin-kelola-pengguna.png)
 
 ---
 
@@ -104,10 +113,10 @@ Di halaman login, saya sudah menyediakan tombol **Quick Demo Login** (1 klik lan
 
 | Peran | Username | Password |
 | :--- | :--- | :--- |
-| **Admin Fasilitas** | `admin` | `password123` |
-| **Mahasiswa** | `student` | `password123` |
-| **Dosen / Staff** | `staff` | `password123` |
+| **Admin Fasilitas** | `admin` | `admin123` |
+| **Mahasiswa** | `student` | `student123` |
+| **Dosen / Staff** | `staff` | `staff123` |
 
 ---
 
-Dibuat oleh Reiky Aryanando Pratama
+Dirancang dan dikembangkan dengan ❤️ oleh Reiky Aryanando Pratama
