@@ -76,7 +76,7 @@ if (hasConflict)
 ## 🏛️ Arsitektur Sistem & Struktur Proyek
 
 ```text
-BookingApp/
+SmartRoom/
 ├── Controllers/
 │   ├── Api/
 │   │   ├── AuthApiController.cs        # REST API: Login, Register, Current User, Logout
@@ -134,8 +134,8 @@ BookingApp/
 
 ### 2. Kloning Repositori
 ```bash
-git clone https://github.com/reiky03/BookingApp.git
-cd BookingApp
+git clone https://github.com/reiky03/SmartRoom.git
+cd SmartRoom
 ```
 
 ### 3. Konfigurasi Database (`appsettings.json`)
